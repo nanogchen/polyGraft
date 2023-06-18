@@ -18,7 +18,7 @@ Representative examples are given in the **examples** folder. Check it out! For 
 1. generate the substrate lattice, and import polymer (gro and itp files);
 2. generate the structure (gro file) and topology (itp file) using polyGraft.
 
-Using PEO-grafted gold nanoparticle as an example, the code is
+Using PEO-grafted gold nanoparticle as an example, the code is (MUST use under examples directory):
 ```{python}
 import sys
 sys.path.insert(0,"../polyGraft/")
@@ -53,7 +53,6 @@ if __name__ == '__main__':
 	# save gro and itp
 	peo_g_np.toGRO("peo_g_np_gft"+"-R-"+str(radius)+"-sigma-"+str(gft)+".gro")
 	peo_g_np.toITP("peo_g_np_gft"+"-R-"+str(radius)+"-sigma-"+str(gft)+".itp")
-
 ```
 
 # How to cite
