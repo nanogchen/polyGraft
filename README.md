@@ -19,7 +19,7 @@ Representative examples are given in the **examples** folder. Check it out! For 
 2. generate the structure (gro file) and topology (itp file) using polyGraft.
 
 Using PEO-grafted gold nanoparticle as an example, the code is (MUST use under examples directory):
-```{python}
+```python
 import sys
 sys.path.insert(0,"../polyGraft/")
 from polyGraft import polyGraft
