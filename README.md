@@ -3,9 +3,9 @@
 <img src="polyGraft.jpg" alt="drawing" width="600"/>
 
 # Requisites
-- [atomsk](https://atomsk.univ-lille.fr/)
-- [MDAnalysis](https://www.mdanalysis.org/)
-- numba
+- [atomsk](https://atomsk.univ-lille.fr/) for hard substrate generation (any other tools should also be fine, save in pdb file format)
+- [MDAnalysis](https://www.mdanalysis.org/) file IO
+- [numba](https://numba.pydata.org/) accelerated array processing
 
 Installation steps:
 1. create a python environment adding MDAnalysis, numba etc.
