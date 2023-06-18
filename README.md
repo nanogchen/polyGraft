@@ -11,7 +11,7 @@ Installation steps:
 1. create a python environment adding MDAnalysis, numba etc.
 2. download atomsk and place under /path/to/polyGraft/bin
 3. use polyGraft for generation under /path/to/polyGraft/examples
-4. to use polyGraft for other polymers, one must provide the .gro and .itp files 
+NOTE: to use other polymers (rather than PEO) for polymer brush generation using polyGraft, one must provide the .gro and .itp files 
 
 # How to use
 Representative examples are given in the **examples** folder. Check it out! For any nanostructure generation, it takes two steps generally:
