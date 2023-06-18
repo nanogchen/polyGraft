@@ -13,6 +13,9 @@ Installation steps:
 3. use polyGraft for generation under /path/to/polyGraft/examples
 4. to use polyGraft for other polymers, one must provide the .gro and .itp files 
 
+# How to use
+Representative examples are given in the **examples** folder. Check it out!
+
 # How to cite
 1. Chen, Guang. "polyGraft: a Program for Molecular Structure and Topology Generation of Polymer-Grafted Hybrid Nanostructures". Submitted.
 2. Chen, Guang, and Elena E. Dormidontova. "Cyclic vs Linear Bottlebrush Polymers in Solution: Side-Chain Length Effect." Macromolecules 56.9 (2023): 3286–3295. https://doi.org/10.1021/acs.macromol.3c00362
