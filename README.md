@@ -8,7 +8,7 @@
 - numba
 
 Installation steps:
-1. create a python environment adding MDAnalysis
+1. create a python environment adding MDAnalysis, numba etc.
 2. download atomsk and place under /path/to/polyGraft/bin
 3. use polyGraft for generation under /path/to/polyGraft/examples
 4. to use polyGraft for other polymers, one must provide the .gro and .itp files 
