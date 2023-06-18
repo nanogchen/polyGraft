@@ -14,7 +14,9 @@ Installation steps:
 4. to use polyGraft for other polymers, one must provide the .gro and .itp files 
 
 # How to use
-Representative examples are given in the **examples** folder. Check it out!
+Representative examples are given in the **examples** folder. Check it out! For any nanostructure generation, it takes two steps generally:
+1. generate the substrate lattice, and import polymer (gro and itp files);
+2. generate the structure (gro file) and topology (itp file) using polyGraft.
 
 # How to cite
 1. Chen, Guang. "polyGraft: a Program for Molecular Structure and Topology Generation of Polymer-Grafted Hybrid Nanostructures". Submitted.
