@@ -3,15 +3,16 @@
 <img src="polyGraft.jpg" alt="drawing" width="600"/>
 
 # Requisites
-- [atomsk](https://atomsk.univ-lille.fr/)
-- [MDAnalysis](https://www.mdanalysis.org/)
-- numba
+- [atomsk](https://atomsk.univ-lille.fr/) for hard substrate generation (any other tools should also be fine, save in pdb file format)
+- [MDAnalysis](https://www.mdanalysis.org/) file IO
+- [numba](https://numba.pydata.org/) accelerated array processing
 
 Installation steps:
-1. create a python environment adding MDAnalysis
+1. create a python environment adding MDAnalysis, numba etc.
 2. download atomsk and place under /path/to/polyGraft/bin
 3. use polyGraft for generation under /path/to/polyGraft/examples
-4. to use polyGraft for other polymers, one must provide the .gro and .itp files 
+
+NOTE: to use other polymers (rather than PEO) for polymer brush generation using polyGraft, one must provide the .gro and .itp files 
 
 # How to use
 Representative examples are given in the **examples** folder. Check it out! For any nanostructure generation, it takes two steps generally:
