@@ -91,7 +91,7 @@ class polyGraft():
 		# for bottlebrush: generate the positions
 
 		self.centerIdx_ = []
-		self.graftStruct_ = self.center_.polyGRO_
+		self.graftStruct_ = self.center_.polyGRO_.copy()
 		pos_all = []
 		atomnames_all = []
 
