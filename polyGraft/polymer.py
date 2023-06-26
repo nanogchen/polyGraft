@@ -14,8 +14,22 @@
 # GNU General Public License for more details.
 #
 
+# bond/angle parameters from opls-aa
+pars_dict = {
+	"CC" : 1.529,
+	"CO" : 1.41,
+	"OC" : 1.41,
+	"OCC" : 109.5,
+	"COC" : 109.5,
+	"CCO" : 109.5,
+	"CCC" : 112.7
+}
+
+from utils import rad2deg,deg2rad
 import MDAnalysis as mda
 import numpy as np
+import math
+import sys
 
 class Polymer():
 
@@ -66,6 +80,10 @@ class Polymer():
 		ref_vec = ref_vec/np.linalg.norm(ref_vec)
 		return ref_vec
 
+	def updatePos(self, pos):
+		assert pos.shape[0] == self.polyGRO_.atoms.n_atoms, f"The given position should have the same length as the NO. of atoms!"
+		self.polyGRO_.atoms.positions = pos
+
 	def center2graft(self):
 		"""
 		move the grafting point (first atom) of a polymer to the origin 
@@ -80,4 +98,108 @@ class Polymer():
 		assert principal_axes_idx in [0,1,2], f"Only 0/1/2 of the axis is allowed for align the polymer!"
 
 		self.polyGRO_.atoms.align_principal_axis(principal_axes_idx, ref_direction)
-		
+
+	def gen_pos(self, Nrepeats, topology='linear'):
+		# generate the position of the given polymer: heavy atoms only (hydrogen will be taken care of by Avogadro)
+
+		pos = []
+		atomnames = []
+
+		if self.polyname_ == "PEO":
+
+			# the basic length
+			dx = pars_dict['CC']*math.cos(deg2rad(90.0-0.5*pars_dict['CCC']))
+			dy = pars_dict['CC']*math.sin(deg2rad(90.0-0.5*pars_dict['CCC']))
+
+			for ires in range(Nrepeats):
+				x_inc = ires*3*dx 
+
+				if ires % 2 == 0:
+					# first carbon
+					xc = x_inc
+					yc = 0.0
+					zc = 0.0
+					pos.append([xc,yc,zc])
+					atomnames.append('C')
+
+					# second carbon
+					xc = x_inc+dx
+					yc = -dy
+					zc = 0.0
+					pos.append([xc,yc,zc])
+					atomnames.append('C')
+
+					# oxygen
+					xc = x_inc+2*dx
+					yc = 0.0
+					zc = 0.0
+					pos.append([xc,yc,zc])
+					atomnames.append('O')
+
+				else:
+					# first carbon
+					xc = x_inc
+					yc = -dy
+					zc = 0.0
+					pos.append([xc,yc,zc])
+					atomnames.append('C')
+
+					# second carbon
+					xc = x_inc+dx
+					yc = 0.0
+					zc = 0.0
+					pos.append([xc,yc,zc])
+					atomnames.append('C')
+
+					# oxygen
+					xc = x_inc+2*dx
+					yc = -dy
+					zc = 0.0
+					pos.append([xc,yc,zc])
+					atomnames.append('O')
+
+		elif self.polyname_ == "PVA":
+
+			# add head group
+			pos.append([0.0, 0.0, 0.0])
+			atomnames.append('C')
+
+			# the basic length
+			dx = pars_dict['CC']*math.cos(deg2rad(90.0-0.5*pars_dict['CCC']))
+			dy = pars_dict['CC']*math.sin(deg2rad(90.0-0.5*pars_dict['CCC']))
+
+			for ires in range(Nrepeats):
+				x_inc = ires*2*dx
+
+				# first carbon		
+				xc = x_inc+dx
+				yc = -dy
+				zc = 0.0
+				pos.append([xc,yc,zc])
+				atomnames.append('C')
+
+				# second carbon
+				xc = x_inc+2*dx
+				yc = 0.0
+				zc = 0.0
+				pos.append([xc,yc,zc])
+				atomnames.append('C')
+
+				# oxygen
+				pos.append([xc,yc+pars_dict["OC"],zc])
+				atomnames.append('O')
+
+			# add tail
+			pos.append([xc+dx, -dy, 0.0])
+			atomnames.append('C')
+
+		else:
+			print(f"Unknown polymer type ({self.polyname_}) other than PEO and PVA! Exiting...")
+			sys.exit(0)
+
+		# create an atom group
+		self.polyGRO_ = mda.Universe.empty(n_atoms = len(pos))
+		self.polyGRO_.add_TopologyAttr('names', atomnames)
+		self.polyGRO_.add_TopologyAttr('elements', atomnames)
+		self.polyGRO_.add_TopologyAttr('resnames', [self.polyname_])
+		self.polyGRO_.load_new(np.array(pos), order='fac')

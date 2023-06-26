@@ -18,7 +18,7 @@ import math
 import sys
 import numpy as np
 import MDAnalysis as mda
-from polymer import Polymer
+from polymer import Polymer,pars_dict
 from crystal import Crystal
 from atomsk import Atomsk
 from utils import getNN_two, getTransformationMat
@@ -35,15 +35,32 @@ class polyGraft():
 		self.Ngrafts_ = 0
 		self.Natoms_ = 0
 		self.graftStruct_ = None
+		self.graftAtoms_ = None # substrate atoms to be grafted with grafts
 		self.graftPts_ = None
 		self.centerIdx_ = None
 
 	def setGraftingDensity(self, graftingDensity):
-		assert graftingDensity < 0.06, f"Grafting density cannot be too large (smaller than 0.06 A^-2)!"
-		self.graftingDensity_ = graftingDensity		
+		if isinstance(self.center_, Crystal):
+			assert graftingDensity < 0.06, f"Grafting density cannot be too large (smaller than 0.06 A^-2)!"
+			self.graftingDensity_ = graftingDensity		
 
-		# spacing 
-		self.spacing_ = math.sqrt(1/graftingDensity)
+			# spacing 
+			self.spacing_ = math.sqrt(1/graftingDensity)
+
+		elif isinstance(self.center_, Polymer):
+			assert self.graftingDensity_<=1.0, f"Grafting density ({self.graftingDensity_}) should not be larger than 1.0 grafts/monomer for bottlebrush polymers!"
+			self.graftingDensity_ = graftingDensity
+
+			# spacing 
+			self.spacing_ = int(1.0/graftingDensity)
+
+	def setGftAtoms(self, atomname):
+		# set atoms of the substrate to be grafted
+		if isinstance(self.center_, Crystal):
+			self.graftAtoms_ = self.center_.crystal_.select_atoms(f'name {atomname}')
+
+		elif isinstance(self.center_, Polymer):
+			self.graftAtoms_ = self.center_.polyGRO_.select_atoms(f'name {atomname}')
 
 	def genGraftStruct(self):
 		# assemble two components together
@@ -71,8 +88,35 @@ class polyGraft():
 		# self.graftStruct_.add_TopologyAttr('resid', resid_lst)
 
 	def graftSoft2Soft(self):
-		# for bottlebrush
-		pass
+		# for bottlebrush: generate the positions
+
+		self.centerIdx_ = []
+		self.graftStruct_ = self.center_.polyGRO_
+		pos_all = []
+		atomnames_all = []
+
+		# loop over the graft points
+		for i in range(self.graftAtoms_.n_atoms):
+
+			# add side chain if satisfy the criteria
+			if i % self.spacing_ == 0:
+				self.centerIdx_.append(i+1)
+				gft_pt = self.graftAtoms_[i].position
+				i_gft = self.graft_.polyGRO_.copy()
+
+				# two branches with 45 deg
+				if i % 2 == 0:
+					norm_vector = np.array([0, math.sqrt(2)/2.0, math.sqrt(2)/2.0])
+				else:
+					norm_vector = np.array([0, math.sqrt(2)/2.0, -math.sqrt(2)/2.0])
+
+				ref_vect = self.graft_.getEndVect()
+				RotMat,_ = getTransformationMat(ref_vect, norm_vector)
+				TransMat = norm_vector*pars_dict['CC']
+				pos_new = np.transpose(np.matmul(RotMat, np.transpose(np.array(i_gft.atoms.positions)))) + np.tile(gft_pt, ((len(i_gft.atoms.positions),1))) + np.tile(TransMat, ((len(i_gft.atoms.positions),1)))
+				i_gft.load_new(pos_new, order='fac')
+
+				self.graftStruct_ = mda.Merge(self.graftStruct_.atoms, i_gft.atoms)
 
 	def graftSoft2Hard(self):
 		
@@ -428,3 +472,12 @@ class polyGraft():
 
 				for jdihedral in self.graft_.polyITP_.dihedrals:
 					FO.write(f"{jdihedral._ix[0]+1+dihedral_shift} {jdihedral._ix[3]+1+dihedral_shift} {1}\n")
+
+	def toPDB(self, fname):
+
+		if self.graftStruct_ is not None:
+			self.graftStruct_.atoms.write(fname)
+
+		else:
+			print(f"The graft structure is None! Cannot write pdb file. Exiting")
+			sys.exit(0)

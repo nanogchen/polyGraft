@@ -38,14 +38,14 @@ def getTransformationMat(ref_vec, norm_vector):
 	sin_theta = np.linalg.norm(vect_k)/(np.linalg.norm(ref_vec)*np.linalg.norm(norm_vector))
 	cos_theta = np.dot(ref_vec, norm_vector)/(np.linalg.norm(ref_vec)*np.linalg.norm(norm_vector))
 
-	RotMat = np.identity(3) + skew_mat*sin_theta + np.matmul(skew_mat,skew_mat)*(1-cos_theta) # this is is equivelant to the upper one
+	RotMat = np.identity(3) + skew_mat*sin_theta + np.matmul(skew_mat,skew_mat)*(1-cos_theta) 
+
+	# assert a rotation matrix
+	assert (np.linalg.det(RotMat) - 1) < 1e-5, f"The rotation matrix should have determinant of 1, but got {np.linalg.det(RotMat)}"
 
 	# translational matrix
 	TransMat = norm_vector*Au_S
 	TransMat = np.expand_dims(TransMat, axis=0)
-
-	# assert a rotation matrix
-	assert (np.linalg.det(RotMat) - 1) < 1e-5, f"The rotation matrix should have determinant of 1, but got {np.linalg.det(RotMat)}"
 
 	return RotMat,TransMat
 
@@ -80,3 +80,11 @@ def getNN_two(pos1, pos2):
 		atom_idx.append(gft_idx)
 
 	return pos2[atom_idx,:], np.array(atom_idx)+1
+
+def rad2deg(rad):
+
+	return 180.0*rad/math.pi
+
+def deg2rad(deg):
+
+	return deg*math.pi/180.0
