@@ -21,6 +21,8 @@ Representative examples are given in the **examples** folder. Check it out! For 
 
 Using PEO-grafted gold nanoparticle as an example, the code is (MUST use under examples directory):
 ```python
+#!/bin/env python
+
 import sys
 sys.path.insert(0,"../polyGraft/")
 from polyGraft import polyGraft
@@ -49,6 +51,7 @@ if __name__ == '__main__':
 	peo_g_np.setGraftingDensity(gft)
 
 	# generate the grafted structure
+	peo_g_np.setGftAtoms('Au')
 	peo_g_np.genGraftStruct()
 
 	# save gro and itp
