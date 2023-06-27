@@ -50,7 +50,7 @@ if __name__ == '__main__':
 	gft = 0.0250 
 	peo_g_np.setGraftingDensity(gft)
 
-	# generate the grafted structure
+	# set substrate atoms to be grafted and generate the grafted structure
 	peo_g_np.setGftAtoms('Au')
 	peo_g_np.genGraftStruct()
 
