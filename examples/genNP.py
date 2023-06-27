@@ -28,6 +28,7 @@ if __name__ == '__main__':
 	peo_g_np.setGraftingDensity(gft)
 
 	# generate the grafted structure
+	peo_g_np.setGftAtoms('Au')
 	peo_g_np.genGraftStruct()
 
 	# save gro and itp

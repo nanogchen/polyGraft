@@ -38,7 +38,7 @@ class polyGraft():
 		self.Natoms_ = 0
 		self.graftStruct_ = None
 		self.graftAtoms_ = None 	# substrate atoms optional for grafts
-		self.graftPts_ = None
+		self.grafts_all_pos_ = None
 		self.centerGftedIdx_ = None # substrate atoms to be grafted with grafts
 
 	def setGraftingDensity(self, graftingDensity):
@@ -151,7 +151,7 @@ class polyGraft():
 		self.Ngrafts_ = Nchainsx*Nchainsy
 
 		# initialize the pos
-		self.graftPts_ = np.zeros((self.Ngrafts_*self.graft_.polyGRO_.atoms.n_atoms,3))
+		self.grafts_all_pos_ = np.zeros((self.Ngrafts_*self.graft_.polyGRO_.atoms.n_atoms,3))
 
 		# self.Natoms
 		self.Natoms_ = self.graft_.polyGRO_.atoms.n_atoms*self.Ngrafts_ + self.center_.crystal_.atoms.n_atoms
@@ -168,7 +168,7 @@ class polyGraft():
 		graft_pts = np.array(graft_pts)
 
 		# find grafted AU pos/index
-		gld_gft_pts, idx = getNN_two(graft_pts, self.center_.crystal_.atoms.positions)
+		gld_gft_pts, idx = getNN_two(graft_pts, self.graftAtoms_.positions)
 		self.centerGftedIdx_ = idx
 
 		# determine normal and set
@@ -187,7 +187,7 @@ class polyGraft():
 			RotMat = np.transpose(RotMat)
 
 			ipos = np.matmul(poly_pos, RotMat) + np.tile(TransMat, (self.graft_.polyGRO_.atoms.n_atoms,1)) + np.tile(gld_gft_pts[ichain,:], ((self.graft_.polyGRO_.atoms.n_atoms,1)))
-			self.graftPts_[ichain*self.graft_.polyGRO_.atoms.n_atoms:(1+ichain)*self.graft_.polyGRO_.atoms.n_atoms, :] = ipos
+			self.grafts_all_pos_[ichain*self.graft_.polyGRO_.atoms.n_atoms:(1+ichain)*self.graft_.polyGRO_.atoms.n_atoms, :] = ipos
 
 	def particleGraft(self):
 		# graft on the outer surface of the particle
@@ -201,7 +201,7 @@ class polyGraft():
 		self.Ngrafts_ = round(self.graftingDensity_*surfArea)
 
 		# initialize the pos
-		self.graftPts_ = np.zeros((self.Ngrafts_*self.graft_.polyGRO_.atoms.n_atoms,3))
+		self.grafts_all_pos_ = np.zeros((self.Ngrafts_*self.graft_.polyGRO_.atoms.n_atoms,3))
 
 		# self.Natoms
 		self.Natoms_ = self.graft_.polyGRO_.atoms.n_atoms*self.Ngrafts_ + self.center_.crystal_.atoms.n_atoms
@@ -219,7 +219,7 @@ class polyGraft():
 		graft_pts = np.transpose(graft_pts) + np.expand_dims(np.array(center_pt), axis=0)
 
 		# find gfted AU pos/index
-		gld_gft_pts, idx = getNN_two(graft_pts, self.center_.crystal_.atoms.positions)
+		gld_gft_pts, idx = getNN_two(graft_pts, self.graftAtoms_.positions)
 		self.centerGftedIdx_ = idx
 
 		# determine normal and set
@@ -239,7 +239,7 @@ class polyGraft():
 			RotMat = np.transpose(RotMat)
 
 			ipos = np.matmul(poly_pos, RotMat) + np.tile(TransMat, (self.graft_.polyGRO_.atoms.n_atoms,1)) + np.tile(gld_gft_pts[ichain,:], ((self.graft_.polyGRO_.atoms.n_atoms,1)))
-			self.graftPts_[ichain*self.graft_.polyGRO_.atoms.n_atoms:(1+ichain)*self.graft_.polyGRO_.atoms.n_atoms, :] = ipos
+			self.grafts_all_pos_[ichain*self.graft_.polyGRO_.atoms.n_atoms:(1+ichain)*self.graft_.polyGRO_.atoms.n_atoms, :] = ipos
 
 	def poreGraft(self):
 		# graft on the inner surface of the pore
@@ -254,7 +254,7 @@ class polyGraft():
 		self.Ngrafts_ = Nchainsxy*Nchainsz
 
 		# initialize the pos
-		self.graftPts_ = np.zeros((self.Ngrafts_*self.graft_.polyGRO_.atoms.n_atoms,3))
+		self.grafts_all_pos_ = np.zeros((self.Ngrafts_*self.graft_.polyGRO_.atoms.n_atoms,3))
 
 		# self.Natoms
 		self.Natoms_ = self.graft_.polyGRO_.atoms.n_atoms*self.Ngrafts_ + self.center_.crystal_.atoms.n_atoms
@@ -274,7 +274,7 @@ class polyGraft():
 		graft_pts = np.array(graft_pts)	+ center_pt - np.array([0,0,0.5*depth])
 
 		# find grafted AU pos/index
-		gld_gft_pts, idx = getNN_two(graft_pts, self.center_.crystal_.atoms.positions)
+		gld_gft_pts, idx = getNN_two(graft_pts, self.graftAtoms_.positions)
 		self.centerGftedIdx_ = idx
 
 		# determine normal and set
@@ -296,7 +296,7 @@ class polyGraft():
 			RotMat = np.transpose(RotMat)
 
 			ipos = np.matmul(poly_pos, RotMat) + np.tile(TransMat, (self.graft_.polyGRO_.atoms.n_atoms,1)) + np.tile(gld_gft_pts[ichain,:], ((self.graft_.polyGRO_.atoms.n_atoms,1)))
-			self.graftPts_[ichain*self.graft_.polyGRO_.atoms.n_atoms:(1+ichain)*self.graft_.polyGRO_.atoms.n_atoms, :] = ipos
+			self.grafts_all_pos_[ichain*self.graft_.polyGRO_.atoms.n_atoms:(1+ichain)*self.graft_.polyGRO_.atoms.n_atoms, :] = ipos
 
 	def rodGraft(self):
 		# graft on the outer surface of the rod
@@ -311,7 +311,7 @@ class polyGraft():
 		self.Ngrafts_ = Nchainsxy*Nchainsz
 
 		# initialize the pos
-		self.graftPts_ = np.zeros((self.Ngrafts_*self.graft_.polyGRO_.atoms.n_atoms,3))
+		self.grafts_all_pos_ = np.zeros((self.Ngrafts_*self.graft_.polyGRO_.atoms.n_atoms,3))
 
 		# self.Natoms
 		self.Natoms_ = self.graft_.polyGRO_.atoms.n_atoms*self.Ngrafts_ + self.center_.crystal_.atoms.n_atoms
@@ -331,7 +331,7 @@ class polyGraft():
 		graft_pts = np.array(graft_pts)	+ center_pt - np.array([0,0,0.5*depth])
 
 		# find grafted AU pos/index
-		gld_gft_pts, idx = getNN_two(graft_pts, self.center_.crystal_.atoms.positions)
+		gld_gft_pts, idx = getNN_two(graft_pts, self.graftAtoms_.positions)
 		self.centerGftedIdx_ = idx
 
 		# determine normal and set
@@ -352,7 +352,7 @@ class polyGraft():
 			RotMat = np.transpose(RotMat)
 
 			ipos = np.matmul(poly_pos, RotMat) + np.tile(TransMat, (self.graft_.polyGRO_.atoms.n_atoms,1)) + np.tile(gld_gft_pts[ichain,:], ((self.graft_.polyGRO_.atoms.n_atoms,1)))
-			self.graftPts_[ichain*self.graft_.polyGRO_.atoms.n_atoms:(1+ichain)*self.graft_.polyGRO_.atoms.n_atoms, :] = ipos
+			self.grafts_all_pos_[ichain*self.graft_.polyGRO_.atoms.n_atoms:(1+ichain)*self.graft_.polyGRO_.atoms.n_atoms, :] = ipos
 
 	def toGRO(self, fname):
 
@@ -382,7 +382,7 @@ class polyGraft():
 					atomid = g_idx + 1
 
 					FO.write("%5d%5s%5s%5d%8.3f%8.3f%8.3f\n" % (resid, resname, atomname, atomid, \
-								self.graftPts_[g_idx,0]/10, self.graftPts_[g_idx,1]/10, self.graftPts_[g_idx,2]/10))
+								self.grafts_all_pos_[g_idx,0]/10, self.grafts_all_pos_[g_idx,1]/10, self.grafts_all_pos_[g_idx,2]/10))
 
 			# write lattice 
 			for idx in range(self.center_.crystal_.atoms.n_atoms):
