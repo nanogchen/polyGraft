@@ -504,11 +504,12 @@ class polyGraft():
 
 				# BTB1
 				if i==0:
-					FO.write(f"; CH3\n")
-					FO.write(f"C3{1} {res_rtp_dict['C3']}\n")
-					FO.write(f"HE{1} {res_rtp_dict['HE']}\n")
-					FO.write(f"HE{2} {res_rtp_dict['HE']}\n")
-					FO.write(f"HE{3} {res_rtp_dict['HE']}\n")
+					if self.center_.topology_ == "linear":
+						FO.write(f"; CH3\n")
+						FO.write(f"C3{1} {res_rtp_dict['C3']}\n")
+						FO.write(f"HE{1} {res_rtp_dict['HE']}\n")
+						FO.write(f"HE{2} {res_rtp_dict['HE']}\n")
+						FO.write(f"HE{3} {res_rtp_dict['HE']}\n")
 
 				# BTB2
 				for iatom in BBP_G_atoms:
@@ -519,21 +520,23 @@ class polyGraft():
 
 				# BTB3
 				if i==2:
-					FO.write(f"; CH3\n")
-					FO.write(f"C3{1} {res_rtp_dict['C3']}\n")
-					FO.write(f"HE{1} {res_rtp_dict['HE']}\n")
-					FO.write(f"HE{2} {res_rtp_dict['HE']}\n")
-					FO.write(f"HE{3} {res_rtp_dict['HE']}\n")
+					if self.center_.topology_ == "linear":
+						FO.write(f"; CH3\n")
+						FO.write(f"C3{1} {res_rtp_dict['C3']}\n")
+						FO.write(f"HE{1} {res_rtp_dict['HE']}\n")
+						FO.write(f"HE{2} {res_rtp_dict['HE']}\n")
+						FO.write(f"HE{3} {res_rtp_dict['HE']}\n")
 
 				# ------------------------------ write bonds
 				FO.write(" [ bonds ]\n")
 				if i==0:
-					# add head
-					FO.write(f"C3{1} {BBP_G_atoms[0]}\n")
-					FO.write(f"C3{1} HE{1}\n")
-					FO.write(f"C3{1} HE{2}\n")
-					FO.write(f"C3{1} HE{3}\n")
-					FO.write(f"{BBP_G_bonds[-1]}\n")
+					if self.center_.topology_ == "linear":
+						# add head
+						FO.write(f"C3{1} {BBP_G_atoms[0]}\n")
+						FO.write(f"C3{1} HE{1}\n")
+						FO.write(f"C3{1} HE{2}\n")
+						FO.write(f"C3{1} HE{3}\n")
+						FO.write(f"{BBP_G_bonds[-1]}\n")
 
 				if i==2:
 					FO.write(f"{BBP_G_bonds[-2]}\n")
@@ -546,11 +549,12 @@ class polyGraft():
 					FO.write(f"{BBP_G_bonds[-2]}\n")
 
 				if i==2:
-					# add head
-					FO.write(f"C3{1} {BBP_G_atoms[-4]}\n")
-					FO.write(f"C3{1} HE{1}\n")
-					FO.write(f"C3{1} HE{2}\n")
-					FO.write(f"C3{1} HE{3}\n")				
+					if self.center_.topology_ == "linear":
+						# add head
+						FO.write(f"C3{1} {BBP_G_atoms[-4]}\n")
+						FO.write(f"C3{1} HE{1}\n")
+						FO.write(f"C3{1} HE{2}\n")
+						FO.write(f"C3{1} HE{3}\n")				
 
 				# add new line if the res is done
 				FO.write("\n")

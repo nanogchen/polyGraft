@@ -31,6 +31,14 @@ import numpy as np
 import math
 import sys
 
+def getRadius(Npva):
+	"""get the radius of the cyclic backbone"""
+
+	ccbond = pars_dict['CC']
+	rad = 0.5*ccbond/math.sin(0.5*math.pi/Npva)
+
+	return rad
+
 class Polymer():
 
 	def __init__(self, poly_name):
@@ -40,6 +48,7 @@ class Polymer():
 		"""
 		self.polyname_ = poly_name
 		self.Nrepeats_ = 0
+		self.topology_ = None
 		self.polyGRO_ = None
 		self.polyITP_ = None
 
@@ -109,6 +118,7 @@ class Polymer():
 		pos = []
 		atomnames = []
 		self.Nrepeats_ = Nrepeats
+		self.topology_ = topology
 
 		if self.polyname_ == "PEO":
 
@@ -165,38 +175,67 @@ class Polymer():
 
 		elif self.polyname_ == "PVA":
 
-			# add head group
-			pos.append([0.0, 0.0, 0.0])
-			atomnames.append('C')
-
-			# the basic length
-			dx = pars_dict['CC']*math.cos(deg2rad(90.0-0.5*pars_dict['CCC']))
-			dy = pars_dict['CC']*math.sin(deg2rad(90.0-0.5*pars_dict['CCC']))
-
-			for ires in range(Nrepeats):
-				x_inc = ires*2*dx
-
-				# first carbon		
-				xc = x_inc+dx
-				yc = -dy
-				zc = 0.0
-				pos.append([xc,yc,zc])
+			if topology == 'linear':
+				# add head group
+				pos.append([0.0, 0.0, 0.0])
 				atomnames.append('C')
 
-				# second carbon
-				xc = x_inc+2*dx
-				yc = 0.0
-				zc = 0.0
-				pos.append([xc,yc,zc])
+				# the basic length
+				dx = pars_dict['CC']*math.cos(deg2rad(90.0-0.5*pars_dict['CCC']))
+				dy = pars_dict['CC']*math.sin(deg2rad(90.0-0.5*pars_dict['CCC']))
+
+				for ires in range(Nrepeats):
+					x_inc = ires*2*dx
+
+					# first carbon		
+					xc = x_inc+dx
+					yc = -dy
+					zc = 0.0
+					pos.append([xc,yc,zc])
+					atomnames.append('C')
+
+					# second carbon
+					xc = x_inc+2*dx
+					yc = 0.0
+					zc = 0.0
+					pos.append([xc,yc,zc])
+					atomnames.append('C')
+
+					# oxygen
+					pos.append([xc,yc+pars_dict["OC"],zc])
+					atomnames.append('O')
+
+				# add tail
+				pos.append([xc+dx, -dy, 0.0])
 				atomnames.append('C')
 
-				# oxygen
-				pos.append([xc,yc+pars_dict["OC"],zc])
-				atomnames.append('O')
+			elif topology == 'cyclic':
+				rad = getRadius(Nrepeats)
+				theta = 2*math.pi/(2*Nrepeats)
 
-			# add tail
-			pos.append([xc+dx, -dy, 0.0])
-			atomnames.append('C')
+				for iatom in range(Nrepeats):
+
+					# first carbon		
+					xc = rad*math.cos((2*iatom)*theta)
+					yc = rad*math.sin((2*iatom)*theta)
+					zc = 0.0
+					pos.append([xc,yc,zc])
+					atomnames.append('C')
+
+					# second carbon
+					xc = rad*math.cos((2*iatom+1)*theta)
+					yc = rad*math.sin((2*iatom+1)*theta)
+					zc = 0.0
+					pos.append([xc,yc,zc])
+					atomnames.append('C')
+
+					# oxygen
+					pos.append([xc,yc,zc+pars_dict["OC"]])
+					atomnames.append('O')
+
+			else:
+				print(f"Unknown topology type ({topology}) other than linear and cyclic! Exiting...")
+				sys.exit(0)
 
 		else:
 			print(f"Unknown polymer type ({self.polyname_}) other than PEO and PVA! Exiting...")
