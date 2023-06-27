@@ -39,8 +39,12 @@ class Polymer():
 
 		"""
 		self.polyname_ = poly_name
+		self.Nrepeats_ = 0
 		self.polyGRO_ = None
-		self.polyITP_ = None		
+		self.polyITP_ = None
+
+	def setNrepeats(self, Nrepeats):
+		self.Nrepeats_ = Nrepeats
 
 	def readGRO(self, GROfile):
 		# read from files
@@ -104,6 +108,7 @@ class Polymer():
 
 		pos = []
 		atomnames = []
+		self.Nrepeats_ = Nrepeats
 
 		if self.polyname_ == "PEO":
 

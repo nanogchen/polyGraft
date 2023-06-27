@@ -1,2 +1,3 @@
-./bin/atomsk
-./polyGraft/__pycache__
+bin/atomsk
+polyGraft/__pycache__
+examples/__pycache__

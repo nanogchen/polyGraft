@@ -23,7 +23,7 @@ if __name__ == '__main__':
 	pva_g_peo = polyGraft(pva, peo)
 
 	# set grafting density: grafts/monomer
-	gft = 0.25
+	gft = 0.5
 	pva_g_peo.setGraftingDensity(gft)
 
 	# generate the graft structure
@@ -32,4 +32,4 @@ if __name__ == '__main__':
 
 	# # save pdb and rtp files
 	pva_g_peo.toPDB(f"PVA{NPVA}_PEO{NPEO}_sigma_{gft}.pdb")
-	# pva_g_peo.toRTP(f"PVA{NPVA}_PEO{NPEO}_sigma_{gft}.rtp")
+	pva_g_peo.toRTP(f"PVA{NPVA}_PEO{NPEO}_sigma_{gft}.rtp")

@@ -16,6 +16,8 @@
 
 import math
 import sys
+sys.path.insert(0, "../examples/")
+from rtp_define import gen_BBP_rtp, res_rtp_dict
 import numpy as np
 import MDAnalysis as mda
 from polymer import Polymer,pars_dict
@@ -35,9 +37,9 @@ class polyGraft():
 		self.Ngrafts_ = 0
 		self.Natoms_ = 0
 		self.graftStruct_ = None
-		self.graftAtoms_ = None # substrate atoms to be grafted with grafts
+		self.graftAtoms_ = None 	# substrate atoms optional for grafts
 		self.graftPts_ = None
-		self.centerIdx_ = None
+		self.centerGftedIdx_ = None # substrate atoms to be grafted with grafts
 
 	def setGraftingDensity(self, graftingDensity):
 		if isinstance(self.center_, Crystal):
@@ -90,7 +92,7 @@ class polyGraft():
 	def graftSoft2Soft(self):
 		# for bottlebrush: generate the positions
 
-		self.centerIdx_ = []
+		self.centerGftedIdx_ = []
 		self.graftStruct_ = self.center_.polyGRO_.copy()
 		pos_all = []
 		atomnames_all = []
@@ -100,7 +102,7 @@ class polyGraft():
 
 			# add side chain if satisfy the criteria
 			if i % self.spacing_ == 0:
-				self.centerIdx_.append(i+1)
+				self.centerGftedIdx_.append(i+1)
 				gft_pt = self.graftAtoms_[i].position
 				i_gft = self.graft_.polyGRO_.copy()
 
@@ -167,7 +169,7 @@ class polyGraft():
 
 		# find grafted AU pos/index
 		gld_gft_pts, idx = getNN_two(graft_pts, self.center_.crystal_.atoms.positions)
-		self.centerIdx_ = idx
+		self.centerGftedIdx_ = idx
 
 		# determine normal and set
 		poly_pos = self.graft_.polyGRO_.atoms.positions
@@ -218,7 +220,7 @@ class polyGraft():
 
 		# find gfted AU pos/index
 		gld_gft_pts, idx = getNN_two(graft_pts, self.center_.crystal_.atoms.positions)
-		self.centerIdx_ = idx
+		self.centerGftedIdx_ = idx
 
 		# determine normal and set
 		poly_pos = self.graft_.polyGRO_.atoms.positions
@@ -273,7 +275,7 @@ class polyGraft():
 
 		# find grafted AU pos/index
 		gld_gft_pts, idx = getNN_two(graft_pts, self.center_.crystal_.atoms.positions)
-		self.centerIdx_ = idx
+		self.centerGftedIdx_ = idx
 
 		# determine normal and set
 		poly_pos = self.graft_.polyGRO_.atoms.positions
@@ -330,7 +332,7 @@ class polyGraft():
 
 		# find grafted AU pos/index
 		gld_gft_pts, idx = getNN_two(graft_pts, self.center_.crystal_.atoms.positions)
-		self.centerIdx_ = idx
+		self.centerGftedIdx_ = idx
 
 		# determine normal and set
 		poly_pos = self.graft_.polyGRO_.atoms.positions
@@ -443,7 +445,7 @@ class polyGraft():
 			FO.write(";sub-graft\n")
 			for ipoly in range(self.Ngrafts_):
 				poly_idx = 1+ipoly*self.graft_.polyITP_.atoms.n_atoms
-				FO.write(f"{poly_idx} {self.centerIdx_[ipoly]} {1}\n")
+				FO.write(f"{poly_idx} {self.centerGftedIdx_[ipoly]} {1}\n")
 
 			# angles info
 			FO.write("\n")
@@ -481,3 +483,74 @@ class polyGraft():
 		else:
 			print(f"The graft structure is None! Cannot write pdb file. Exiting")
 			sys.exit(0)
+
+	def toRTP(self, fname):
+		# generate the residue definition
+
+		BBP_G_atoms, BBP_G_bonds = gen_BBP_rtp(self.graft_.Nrepeats_, self.spacing_)
+
+		with open(fname, 'w') as FO:
+			# header
+			FO.write("[ bondedtypes ]\n")
+			FO.write("; bonds  angles  dihedrals  impropers all_dihedrals nrexcl HH14 RemoveDih\n")
+			FO.write("     1       1          3          1	    1         3      1     0\n")
+			FO.write("\n")
+
+			for i in range(3):
+				FO.write(f"[ BTB{i+1} ]\n")
+
+				# ------------------------------ write atoms
+				FO.write(" [ atoms ]\n")
+
+				# BTB1
+				if i==0:
+					FO.write(f"; CH3\n")
+					FO.write(f"C3{1} {res_rtp_dict['C3']}\n")
+					FO.write(f"HE{1} {res_rtp_dict['HE']}\n")
+					FO.write(f"HE{2} {res_rtp_dict['HE']}\n")
+					FO.write(f"HE{3} {res_rtp_dict['HE']}\n")
+
+				# BTB2
+				for iatom in BBP_G_atoms:
+					try: # if not H
+						FO.write(f"{iatom} {res_rtp_dict[iatom[:2]]}\n")
+					except:
+						FO.write(f"{iatom} {res_rtp_dict['H']}\n")
+
+				# BTB3
+				if i==2:
+					FO.write(f"; CH3\n")
+					FO.write(f"C3{1} {res_rtp_dict['C3']}\n")
+					FO.write(f"HE{1} {res_rtp_dict['HE']}\n")
+					FO.write(f"HE{2} {res_rtp_dict['HE']}\n")
+					FO.write(f"HE{3} {res_rtp_dict['HE']}\n")
+
+				# ------------------------------ write bonds
+				FO.write(" [ bonds ]\n")
+				if i==0:
+					# add head
+					FO.write(f"C3{1} {BBP_G_atoms[0]}\n")
+					FO.write(f"C3{1} HE{1}\n")
+					FO.write(f"C3{1} HE{2}\n")
+					FO.write(f"C3{1} HE{3}\n")
+					FO.write(f"{BBP_G_bonds[-1]}\n")
+
+				if i==2:
+					FO.write(f"{BBP_G_bonds[-2]}\n")
+
+				for ibond in BBP_G_bonds[:-2]:
+					FO.write(f"{ibond}\n")
+
+				if i==1:
+					FO.write(f"{BBP_G_bonds[-1]}\n")
+					FO.write(f"{BBP_G_bonds[-2]}\n")
+
+				if i==2:
+					# add head
+					FO.write(f"C3{1} {BBP_G_atoms[-4]}\n")
+					FO.write(f"C3{1} HE{1}\n")
+					FO.write(f"C3{1} HE{2}\n")
+					FO.write(f"C3{1} HE{3}\n")				
+
+				# add new line if the res is done
+				FO.write("\n")
