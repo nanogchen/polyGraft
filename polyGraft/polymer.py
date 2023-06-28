@@ -122,56 +122,61 @@ class Polymer():
 
 		if self.polyname_ == "PEO":
 
-			# the basic length
-			dx = pars_dict['CC']*math.cos(deg2rad(90.0-0.5*pars_dict['CCC']))
-			dy = pars_dict['CC']*math.sin(deg2rad(90.0-0.5*pars_dict['CCC']))
+			if topology == 'linear':
 
-			for ires in range(Nrepeats):
-				x_inc = ires*3*dx 
+				# the basic length
+				dx = pars_dict['CC']*math.cos(deg2rad(90.0-0.5*pars_dict['CCC']))
+				dy = pars_dict['CC']*math.sin(deg2rad(90.0-0.5*pars_dict['CCC']))
 
-				if ires % 2 == 0:
-					# first carbon
-					xc = x_inc
-					yc = 0.0
-					zc = 0.0
-					pos.append([xc,yc,zc])
-					atomnames.append('C')
+				for ires in range(Nrepeats):
+					x_inc = ires*3*dx 
 
-					# second carbon
-					xc = x_inc+dx
-					yc = -dy
-					zc = 0.0
-					pos.append([xc,yc,zc])
-					atomnames.append('C')
+					if ires % 2 == 0:
+						# first carbon
+						xc = x_inc
+						yc = 0.0
+						zc = 0.0
+						pos.append([xc,yc,zc])
+						atomnames.append('C')
 
-					# oxygen
-					xc = x_inc+2*dx
-					yc = 0.0
-					zc = 0.0
-					pos.append([xc,yc,zc])
-					atomnames.append('O')
+						# second carbon
+						xc = x_inc+dx
+						yc = -dy
+						zc = 0.0
+						pos.append([xc,yc,zc])
+						atomnames.append('C')
 
-				else:
-					# first carbon
-					xc = x_inc
-					yc = -dy
-					zc = 0.0
-					pos.append([xc,yc,zc])
-					atomnames.append('C')
+						# oxygen
+						xc = x_inc+2*dx
+						yc = 0.0
+						zc = 0.0
+						pos.append([xc,yc,zc])
+						atomnames.append('O')
 
-					# second carbon
-					xc = x_inc+dx
-					yc = 0.0
-					zc = 0.0
-					pos.append([xc,yc,zc])
-					atomnames.append('C')
+					else:
+						# first carbon
+						xc = x_inc
+						yc = -dy
+						zc = 0.0
+						pos.append([xc,yc,zc])
+						atomnames.append('C')
 
-					# oxygen
-					xc = x_inc+2*dx
-					yc = -dy
-					zc = 0.0
-					pos.append([xc,yc,zc])
-					atomnames.append('O')
+						# second carbon
+						xc = x_inc+dx
+						yc = 0.0
+						zc = 0.0
+						pos.append([xc,yc,zc])
+						atomnames.append('C')
+
+						# oxygen
+						xc = x_inc+2*dx
+						yc = -dy
+						zc = 0.0
+						pos.append([xc,yc,zc])
+						atomnames.append('O')
+			else:
+				print(f"Cyclic PEO is not available! Exiting...")
+				sys.exit(0)
 
 		elif self.polyname_ == "PVA":
 

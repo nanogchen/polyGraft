@@ -108,9 +108,16 @@ class polyGraft():
 
 				# two branches with 45 deg
 				if i % 2 == 0:
-					norm_vector = np.array([0, math.sqrt(2)/2.0, math.sqrt(2)/2.0])
+					if self.center_.topology_ == "linear":
+						norm_vector = np.array([0, math.sqrt(2)/2.0, math.sqrt(2)/2.0])
+					else:
+						norm_vector = np.array([0, 0, 1])
+
 				else:
-					norm_vector = np.array([0, math.sqrt(2)/2.0, -math.sqrt(2)/2.0])
+					if self.center_.topology_ == "linear":
+						norm_vector = np.array([0, math.sqrt(2)/2.0, -math.sqrt(2)/2.0])
+					else:
+						norm_vector = np.array([0, 0, 1])
 
 				ref_vect = self.graft_.getEndVect()
 				RotMat,_ = getTransformationMat(ref_vect, norm_vector)
