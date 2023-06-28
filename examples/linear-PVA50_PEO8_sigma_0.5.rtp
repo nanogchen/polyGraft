@@ -1,0 +1,455 @@
+[ bondedtypes ]
+; bonds  angles  dihedrals  impropers all_dihedrals nrexcl HH14 RemoveDih
+     1       1          3          1	    1         3      1     0
+
+[ BTB1 ]
+ [ atoms ]
+; CH3
+C31 opls_135   -0.18    1
+HE1 opls_140    0.06    1
+HE2 opls_140    0.06    1
+HE3 opls_140    0.06    1
+C21 opls_136   -0.12    1
+HP1 opls_140    0.06    1
+HP2 opls_140    0.06    1
+CT1 opls_183    0.18    1
+HT1 opls_185    0.06    1
+OP1 opls_180   -0.48    1
+CS1 opls_182    0.12    1
+H1 opls_185    0.06    1
+H2 opls_185    0.06    1
+CS2 opls_182    0.12    1
+H3 opls_185    0.06    1
+H4 opls_185    0.06    1
+OP2 opls_180   -0.48    1
+CS3 opls_182    0.12    1
+H5 opls_185    0.06    1
+H6 opls_185    0.06    1
+CS4 opls_182    0.12    1
+H7 opls_185    0.06    1
+H8 opls_185    0.06    1
+OP3 opls_180   -0.48    1
+CS5 opls_182    0.12    1
+H9 opls_185    0.06    1
+H10 opls_185    0.06    1
+CS6 opls_182    0.12    1
+H11 opls_185    0.06    1
+H12 opls_185    0.06    1
+OP4 opls_180   -0.48    1
+CS7 opls_182    0.12    1
+H13 opls_185    0.06    1
+H14 opls_185    0.06    1
+CS8 opls_182    0.12    1
+H15 opls_185    0.06    1
+H16 opls_185    0.06    1
+OP5 opls_180   -0.48    1
+CS9 opls_182    0.12    1
+H17 opls_185    0.06    1
+H18 opls_185    0.06    1
+CS10 opls_182    0.12    1
+H19 opls_185    0.06    1
+H20 opls_185    0.06    1
+OP6 opls_180   -0.48    1
+CS11 opls_182    0.12    1
+H21 opls_185    0.06    1
+H22 opls_185    0.06    1
+CS12 opls_182    0.12    1
+H23 opls_185    0.06    1
+H24 opls_185    0.06    1
+OP7 opls_180   -0.48    1
+CS13 opls_182    0.12    1
+H25 opls_185    0.06    1
+H26 opls_185    0.06    1
+CS14 opls_182    0.12    1
+H27 opls_185    0.06    1
+H28 opls_185    0.06    1
+OP8 opls_180   -0.48    1
+CS15 opls_182    0.12    1
+H29 opls_185    0.06    1
+H30 opls_185    0.06    1
+CS16 opls_182    0.12    1
+H31 opls_185    0.06    1
+H32 opls_185    0.06    1
+OH opls_154   -0.68    1
+HO opls_155    0.44    1
+C22 opls_136   -0.12    1
+HP3 opls_140    0.06    1
+HP4 opls_140    0.06    1
+CT2 opls_183    0.18    1
+HT2 opls_185    0.06    1
+OH1 opls_154   -0.68    1
+HO1 opls_155    0.44    1
+ [ bonds ]
+C31 C21
+C31 HE1
+C31 HE2
+C31 HE3
+CT2 +C21
+C21 HP1
+C21 HP2
+C21 CT1
+CT1 HT1
+CT1 OP1
+OP1 CS1
+CS1 H1
+CS1 H2
+CS1 CS2
+CS2 H3
+CS2 H4
+CS2 OP2
+OP2 CS3
+CS3 H5
+CS3 H6
+CS3 CS4
+CS4 H7
+CS4 H8
+CS4 OP3
+OP3 CS5
+CS5 H9
+CS5 H10
+CS5 CS6
+CS6 H11
+CS6 H12
+CS6 OP4
+OP4 CS7
+CS7 H13
+CS7 H14
+CS7 CS8
+CS8 H15
+CS8 H16
+CS8 OP5
+OP5 CS9
+CS9 H17
+CS9 H18
+CS9 CS10
+CS10 H19
+CS10 H20
+CS10 OP6
+OP6 CS11
+CS11 H21
+CS11 H22
+CS11 CS12
+CS12 H23
+CS12 H24
+CS12 OP7
+OP7 CS13
+CS13 H25
+CS13 H26
+CS13 CS14
+CS14 H27
+CS14 H28
+CS14 OP8
+OP8 CS15
+CS15 H29
+CS15 H30
+CS15 CS16
+CS16 H31
+CS16 H32
+CS16 OH
+OH HO
+CT1 C22
+C22 HP3
+C22 HP4
+C22 CT2
+CT2 HT2
+CT2 OH1
+OH1 HO1
+
+[ BTB2 ]
+ [ atoms ]
+C21 opls_136   -0.12    1
+HP1 opls_140    0.06    1
+HP2 opls_140    0.06    1
+CT1 opls_183    0.18    1
+HT1 opls_185    0.06    1
+OP1 opls_180   -0.48    1
+CS1 opls_182    0.12    1
+H1 opls_185    0.06    1
+H2 opls_185    0.06    1
+CS2 opls_182    0.12    1
+H3 opls_185    0.06    1
+H4 opls_185    0.06    1
+OP2 opls_180   -0.48    1
+CS3 opls_182    0.12    1
+H5 opls_185    0.06    1
+H6 opls_185    0.06    1
+CS4 opls_182    0.12    1
+H7 opls_185    0.06    1
+H8 opls_185    0.06    1
+OP3 opls_180   -0.48    1
+CS5 opls_182    0.12    1
+H9 opls_185    0.06    1
+H10 opls_185    0.06    1
+CS6 opls_182    0.12    1
+H11 opls_185    0.06    1
+H12 opls_185    0.06    1
+OP4 opls_180   -0.48    1
+CS7 opls_182    0.12    1
+H13 opls_185    0.06    1
+H14 opls_185    0.06    1
+CS8 opls_182    0.12    1
+H15 opls_185    0.06    1
+H16 opls_185    0.06    1
+OP5 opls_180   -0.48    1
+CS9 opls_182    0.12    1
+H17 opls_185    0.06    1
+H18 opls_185    0.06    1
+CS10 opls_182    0.12    1
+H19 opls_185    0.06    1
+H20 opls_185    0.06    1
+OP6 opls_180   -0.48    1
+CS11 opls_182    0.12    1
+H21 opls_185    0.06    1
+H22 opls_185    0.06    1
+CS12 opls_182    0.12    1
+H23 opls_185    0.06    1
+H24 opls_185    0.06    1
+OP7 opls_180   -0.48    1
+CS13 opls_182    0.12    1
+H25 opls_185    0.06    1
+H26 opls_185    0.06    1
+CS14 opls_182    0.12    1
+H27 opls_185    0.06    1
+H28 opls_185    0.06    1
+OP8 opls_180   -0.48    1
+CS15 opls_182    0.12    1
+H29 opls_185    0.06    1
+H30 opls_185    0.06    1
+CS16 opls_182    0.12    1
+H31 opls_185    0.06    1
+H32 opls_185    0.06    1
+OH opls_154   -0.68    1
+HO opls_155    0.44    1
+C22 opls_136   -0.12    1
+HP3 opls_140    0.06    1
+HP4 opls_140    0.06    1
+CT2 opls_183    0.18    1
+HT2 opls_185    0.06    1
+OH1 opls_154   -0.68    1
+HO1 opls_155    0.44    1
+ [ bonds ]
+C21 HP1
+C21 HP2
+C21 CT1
+CT1 HT1
+CT1 OP1
+OP1 CS1
+CS1 H1
+CS1 H2
+CS1 CS2
+CS2 H3
+CS2 H4
+CS2 OP2
+OP2 CS3
+CS3 H5
+CS3 H6
+CS3 CS4
+CS4 H7
+CS4 H8
+CS4 OP3
+OP3 CS5
+CS5 H9
+CS5 H10
+CS5 CS6
+CS6 H11
+CS6 H12
+CS6 OP4
+OP4 CS7
+CS7 H13
+CS7 H14
+CS7 CS8
+CS8 H15
+CS8 H16
+CS8 OP5
+OP5 CS9
+CS9 H17
+CS9 H18
+CS9 CS10
+CS10 H19
+CS10 H20
+CS10 OP6
+OP6 CS11
+CS11 H21
+CS11 H22
+CS11 CS12
+CS12 H23
+CS12 H24
+CS12 OP7
+OP7 CS13
+CS13 H25
+CS13 H26
+CS13 CS14
+CS14 H27
+CS14 H28
+CS14 OP8
+OP8 CS15
+CS15 H29
+CS15 H30
+CS15 CS16
+CS16 H31
+CS16 H32
+CS16 OH
+OH HO
+CT1 C22
+C22 HP3
+C22 HP4
+C22 CT2
+CT2 HT2
+CT2 OH1
+OH1 HO1
+CT2 +C21
+-CT2 C21
+
+[ BTB3 ]
+ [ atoms ]
+C21 opls_136   -0.12    1
+HP1 opls_140    0.06    1
+HP2 opls_140    0.06    1
+CT1 opls_183    0.18    1
+HT1 opls_185    0.06    1
+OP1 opls_180   -0.48    1
+CS1 opls_182    0.12    1
+H1 opls_185    0.06    1
+H2 opls_185    0.06    1
+CS2 opls_182    0.12    1
+H3 opls_185    0.06    1
+H4 opls_185    0.06    1
+OP2 opls_180   -0.48    1
+CS3 opls_182    0.12    1
+H5 opls_185    0.06    1
+H6 opls_185    0.06    1
+CS4 opls_182    0.12    1
+H7 opls_185    0.06    1
+H8 opls_185    0.06    1
+OP3 opls_180   -0.48    1
+CS5 opls_182    0.12    1
+H9 opls_185    0.06    1
+H10 opls_185    0.06    1
+CS6 opls_182    0.12    1
+H11 opls_185    0.06    1
+H12 opls_185    0.06    1
+OP4 opls_180   -0.48    1
+CS7 opls_182    0.12    1
+H13 opls_185    0.06    1
+H14 opls_185    0.06    1
+CS8 opls_182    0.12    1
+H15 opls_185    0.06    1
+H16 opls_185    0.06    1
+OP5 opls_180   -0.48    1
+CS9 opls_182    0.12    1
+H17 opls_185    0.06    1
+H18 opls_185    0.06    1
+CS10 opls_182    0.12    1
+H19 opls_185    0.06    1
+H20 opls_185    0.06    1
+OP6 opls_180   -0.48    1
+CS11 opls_182    0.12    1
+H21 opls_185    0.06    1
+H22 opls_185    0.06    1
+CS12 opls_182    0.12    1
+H23 opls_185    0.06    1
+H24 opls_185    0.06    1
+OP7 opls_180   -0.48    1
+CS13 opls_182    0.12    1
+H25 opls_185    0.06    1
+H26 opls_185    0.06    1
+CS14 opls_182    0.12    1
+H27 opls_185    0.06    1
+H28 opls_185    0.06    1
+OP8 opls_180   -0.48    1
+CS15 opls_182    0.12    1
+H29 opls_185    0.06    1
+H30 opls_185    0.06    1
+CS16 opls_182    0.12    1
+H31 opls_185    0.06    1
+H32 opls_185    0.06    1
+OH opls_154   -0.68    1
+HO opls_155    0.44    1
+C22 opls_136   -0.12    1
+HP3 opls_140    0.06    1
+HP4 opls_140    0.06    1
+CT2 opls_183    0.18    1
+HT2 opls_185    0.06    1
+OH1 opls_154   -0.68    1
+HO1 opls_155    0.44    1
+; CH3
+C31 opls_135   -0.18    1
+HE1 opls_140    0.06    1
+HE2 opls_140    0.06    1
+HE3 opls_140    0.06    1
+ [ bonds ]
+-CT2 C21
+C21 HP1
+C21 HP2
+C21 CT1
+CT1 HT1
+CT1 OP1
+OP1 CS1
+CS1 H1
+CS1 H2
+CS1 CS2
+CS2 H3
+CS2 H4
+CS2 OP2
+OP2 CS3
+CS3 H5
+CS3 H6
+CS3 CS4
+CS4 H7
+CS4 H8
+CS4 OP3
+OP3 CS5
+CS5 H9
+CS5 H10
+CS5 CS6
+CS6 H11
+CS6 H12
+CS6 OP4
+OP4 CS7
+CS7 H13
+CS7 H14
+CS7 CS8
+CS8 H15
+CS8 H16
+CS8 OP5
+OP5 CS9
+CS9 H17
+CS9 H18
+CS9 CS10
+CS10 H19
+CS10 H20
+CS10 OP6
+OP6 CS11
+CS11 H21
+CS11 H22
+CS11 CS12
+CS12 H23
+CS12 H24
+CS12 OP7
+OP7 CS13
+CS13 H25
+CS13 H26
+CS13 CS14
+CS14 H27
+CS14 H28
+CS14 OP8
+OP8 CS15
+CS15 H29
+CS15 H30
+CS15 CS16
+CS16 H31
+CS16 H32
+CS16 OH
+OH HO
+CT1 C22
+C22 HP3
+C22 HP4
+C22 CT2
+CT2 HT2
+CT2 OH1
+OH1 HO1
+C31 CT2
+C31 HE1
+C31 HE2
+C31 HE3
+

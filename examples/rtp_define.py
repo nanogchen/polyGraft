@@ -2,7 +2,7 @@ import sys
 import math
 import MDAnalysis as mda
 
-# residue definition dictionary
+# residue definition dictionary of atoms
 res_rtp_dict = {
 	"C3": "opls_135   -0.18    1", # C in -CH3 of backbone
 	"HE": "opls_140    0.06    1", # H in -CH3 of backbone
