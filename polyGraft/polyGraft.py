@@ -358,122 +358,138 @@ class polyGraft():
 
 		""" save the assembled system in a gro file"""
 
-		# write out gro file for VMD visualization
-		with open(fname, 'w') as FO:
+		if isinstance(self.center_, Polymer):
+			if self.graftStruct_ is not None:
+				self.graftStruct_.atoms.write(fname)
 
-			# total atoms
-			total_atoms = self.Natoms_
+			else:
+				print(f"The graft structure is None! Cannot write gro file. Exiting")
+				sys.exit(0)			
 
-			# add header
-			FO.write("Write by polyGraft \n")
-			FO.write("%5d\n" % (total_atoms))
+		else:			
 
-			# for iatom in self.graftStruct_.atoms:
-			# 	FO.write(f"{iatom.resid:5d}{iatom.resname:5s}{iatom.name:5s}{iatom.id:5d}{iatom.position[0]/10:8.3f}{iatom.position[1]/10:8.3f}{iatom.position[2]/10:8.3f}\n")
+			# write out gro file for VMD visualization
+			with open(fname, 'w') as FO:
 
-			# write polymer first
-			for ichain in range(self.Ngrafts_):
-				for idx in range(self.graft_.polyGRO_.atoms.n_atoms):
-					g_idx = ichain*self.graft_.polyGRO_.atoms.n_atoms + idx
+				# total atoms
+				total_atoms = self.Natoms_
 
-					resid = self.graft_.polyGRO_.atoms.resids[idx]
-					resname = self.graft_.polyGRO_.atoms.resnames[idx]
-					atomname = self.graft_.polyGRO_.atoms.names[idx]
+				# add header
+				FO.write("Write by polyGraft \n")
+				FO.write("%5d\n" % (total_atoms))
+
+				# for iatom in self.graftStruct_.atoms:
+				# 	FO.write(f"{iatom.resid:5d}{iatom.resname:5s}{iatom.name:5s}{iatom.id:5d}{iatom.position[0]/10:8.3f}{iatom.position[1]/10:8.3f}{iatom.position[2]/10:8.3f}\n")
+
+				# write polymer first
+				for ichain in range(self.Ngrafts_):
+					for idx in range(self.graft_.polyGRO_.atoms.n_atoms):
+						g_idx = ichain*self.graft_.polyGRO_.atoms.n_atoms + idx
+
+						resid = self.graft_.polyGRO_.atoms.resids[idx]
+						resname = self.graft_.polyGRO_.atoms.resnames[idx]
+						atomname = self.graft_.polyGRO_.atoms.names[idx]
+						atomid = g_idx + 1
+
+						FO.write("%5d%5s%5s%5d%8.3f%8.3f%8.3f\n" % (resid, resname, atomname, atomid, \
+									self.grafts_all_pos_[g_idx,0]/10, self.grafts_all_pos_[g_idx,1]/10, self.grafts_all_pos_[g_idx,2]/10))
+
+				# write lattice 
+				for idx in range(self.center_.crystal_.atoms.n_atoms):
+					g_idx = self.Ngrafts_*self.graft_.polyGRO_.atoms.n_atoms + idx
+
+					resid = idx + 1
+					resname = self.center_.crystal_.atoms.resnames[idx]
+					atomname = self.center_.crystal_.atoms.names[idx]
 					atomid = g_idx + 1
 
 					FO.write("%5d%5s%5s%5d%8.3f%8.3f%8.3f\n" % (resid, resname, atomname, atomid, \
-								self.grafts_all_pos_[g_idx,0]/10, self.grafts_all_pos_[g_idx,1]/10, self.grafts_all_pos_[g_idx,2]/10))
+								self.center_.crystal_.atoms.positions[idx][0]/10, \
+								self.center_.crystal_.atoms.positions[idx][1]/10, \
+								self.center_.crystal_.atoms.positions[idx][2]/10))
 
-			# write lattice 
-			for idx in range(self.center_.crystal_.atoms.n_atoms):
-				g_idx = self.Ngrafts_*self.graft_.polyGRO_.atoms.n_atoms + idx
-
-				resid = idx + 1
-				resname = self.center_.crystal_.atoms.resnames[idx]
-				atomname = self.center_.crystal_.atoms.names[idx]
-				atomid = g_idx + 1
-
-				FO.write("%5d%5s%5s%5d%8.3f%8.3f%8.3f\n" % (resid, resname, atomname, atomid, \
-							self.center_.crystal_.atoms.positions[idx][0]/10, \
-							self.center_.crystal_.atoms.positions[idx][1]/10, \
-							self.center_.crystal_.atoms.positions[idx][2]/10))
-
-			# add ends
-			FO.write("%10.5f%10.5f%10.5f\n" % (10.0,10.0,10.0))
+				# add ends
+				FO.write("%10.5f%10.5f%10.5f\n" % (10.0,10.0,10.0))
 
 	def toITP(self, fname):
 
-		with open(fname, 'w') as FO:
+		if isinstance(self.center_, Polymer):
+			print(f"Generation of itp file for bottlebrush polymer is not available by this function! Generate pdb and rtp then use Gromacs to generate it!")
+			sys.exit(0)			
 
-			# header
-			FO.write(f"[ moleculetype ]\n")
-			FO.write(f"polyGraft            3\n")			
-			FO.write("\n")
+		else:	
 
-			# polymer grafts first, substrate second
-			# atoms info
-			FO.write("[ atoms ]\n")
-			poly_n_atoms = self.graft_.polyITP_.atoms.n_atoms
-			for i in range(self.Ngrafts_):
-				for j in range(poly_n_atoms):
-					atomidx = i*poly_n_atoms+j+1
-					iatom = self.graft_.polyITP_.atoms[j]
+			with open(fname, 'w') as FO:
 
-					# atom_idx atom_type resid resname atom_name resid charge mass
-					FO.write(f"{atomidx} {iatom.type} {iatom.resid} {iatom.resname} {iatom.name} {iatom.resid} {iatom.charge:.3f} {iatom.mass}\n")
-			
-			FO.write(";sub\n")
-			for katom in self.center_.crystal_.atoms:
-				atomidx+=1
-				FO.write(f"{atomidx} {katom.type} {katom.resid} {katom.resname} {katom.name} {katom.resid} {katom.charge:.3f} {katom.mass}\n")
-	
-			# bonds info
-			FO.write("\n")
-			FO.write("[ bonds ]\n")
-			for i in range(self.Ngrafts_):
-				bond_shift = i*self.graft_.polyITP_.atoms.n_atoms
+				# header
+				FO.write(f"[ moleculetype ]\n")
+				FO.write(f"polyGraft            3\n")			
+				FO.write("\n")
 
-				for jbond in self.graft_.polyITP_.bonds:
-					FO.write(f"{jbond._ix[0]+1+bond_shift} {jbond._ix[1]+1+bond_shift} {jbond.type}\n")
+				# polymer grafts first, substrate second
+				# atoms info
+				FO.write("[ atoms ]\n")
+				poly_n_atoms = self.graft_.polyITP_.atoms.n_atoms
+				for i in range(self.Ngrafts_):
+					for j in range(poly_n_atoms):
+						atomidx = i*poly_n_atoms+j+1
+						iatom = self.graft_.polyITP_.atoms[j]
+
+						# atom_idx atom_type resid resname atom_name resid charge mass
+						FO.write(f"{atomidx} {iatom.type} {iatom.resid} {iatom.resname} {iatom.name} {iatom.resid} {iatom.charge:.3f} {iatom.mass}\n")
 				
-			FO.write(";sub-sub\n")
-			bond_shift += self.graft_.polyITP_.atoms.n_atoms
-			for kbond in self.center_.crystal_.bonds:
-				# FO.write(f"{kbond._ix[0]+1+bond_shift} {kbond._ix[1]+1+bond_shift} {kbond.type}\n")
-				FO.write(f"{kbond._ix[0]+1+bond_shift} {kbond._ix[1]+1+bond_shift} {1}\n")
+				FO.write(";sub\n")
+				for katom in self.center_.crystal_.atoms:
+					atomidx+=1
+					FO.write(f"{atomidx} {katom.type} {katom.resid} {katom.resname} {katom.name} {katom.resid} {katom.charge:.3f} {katom.mass}\n")
+		
+				# bonds info
+				FO.write("\n")
+				FO.write("[ bonds ]\n")
+				for i in range(self.Ngrafts_):
+					bond_shift = i*self.graft_.polyITP_.atoms.n_atoms
 
-			FO.write(";sub-graft\n")
-			for ipoly in range(self.Ngrafts_):
-				poly_idx = 1+ipoly*self.graft_.polyITP_.atoms.n_atoms
-				FO.write(f"{poly_idx} {self.centerGftedIdx_[ipoly]} {1}\n")
+					for jbond in self.graft_.polyITP_.bonds:
+						FO.write(f"{jbond._ix[0]+1+bond_shift} {jbond._ix[1]+1+bond_shift} {jbond.type}\n")
+					
+				FO.write(";sub-sub\n")
+				bond_shift += self.graft_.polyITP_.atoms.n_atoms
+				for kbond in self.center_.crystal_.bonds:
+					# FO.write(f"{kbond._ix[0]+1+bond_shift} {kbond._ix[1]+1+bond_shift} {kbond.type}\n")
+					FO.write(f"{kbond._ix[0]+1+bond_shift} {kbond._ix[1]+1+bond_shift} {1}\n")
 
-			# angles info
-			FO.write("\n")
-			FO.write("[ angles ]\n")
-			for i in range(self.Ngrafts_):
-				angle_shift = i*self.graft_.polyITP_.atoms.n_atoms
+				FO.write(";sub-graft\n")
+				for ipoly in range(self.Ngrafts_):
+					poly_idx = 1+ipoly*self.graft_.polyITP_.atoms.n_atoms
+					FO.write(f"{poly_idx} {self.centerGftedIdx_[ipoly]} {1}\n")
+
+				# angles info
+				FO.write("\n")
+				FO.write("[ angles ]\n")
+				for i in range(self.Ngrafts_):
+					angle_shift = i*self.graft_.polyITP_.atoms.n_atoms
+					
+					for jangle in self.graft_.polyITP_.angles:					
+						FO.write(f"{jangle._ix[0]+1+angle_shift} {jangle._ix[1]+1+angle_shift} {jangle._ix[2]+1+angle_shift} {jangle.type}\n")	
+
+				# dihedrals info
+				FO.write("\n")
+				FO.write("[ dihedrals ]\n")
+				for i in range(self.Ngrafts_):
+					dihedral_shift = i*self.graft_.polyITP_.atoms.n_atoms
+
+					for jdihedral in self.graft_.polyITP_.dihedrals:
+						FO.write(f"{jdihedral._ix[0]+1+dihedral_shift} {jdihedral._ix[1]+1+dihedral_shift} {jdihedral._ix[2]+1+dihedral_shift} {jdihedral._ix[3]+1+dihedral_shift} {jdihedral.type}\n")
 				
-				for jangle in self.graft_.polyITP_.angles:					
-					FO.write(f"{jangle._ix[0]+1+angle_shift} {jangle._ix[1]+1+angle_shift} {jangle._ix[2]+1+angle_shift} {jangle.type}\n")	
+				# pairs info
+				FO.write("\n")
+				FO.write("[ pairs ]\n")
+				FO.write(";from 1-4 pair\n")
+				for i in range(self.Ngrafts_):
+					dihedral_shift = i*self.graft_.polyITP_.atoms.n_atoms
 
-			# dihedrals info
-			FO.write("\n")
-			FO.write("[ dihedrals ]\n")
-			for i in range(self.Ngrafts_):
-				dihedral_shift = i*self.graft_.polyITP_.atoms.n_atoms
-
-				for jdihedral in self.graft_.polyITP_.dihedrals:
-					FO.write(f"{jdihedral._ix[0]+1+dihedral_shift} {jdihedral._ix[1]+1+dihedral_shift} {jdihedral._ix[2]+1+dihedral_shift} {jdihedral._ix[3]+1+dihedral_shift} {jdihedral.type}\n")
-			
-			# pairs info
-			FO.write("\n")
-			FO.write("[ pairs ]\n")
-			FO.write(";from 1-4 pair\n")
-			for i in range(self.Ngrafts_):
-				dihedral_shift = i*self.graft_.polyITP_.atoms.n_atoms
-
-				for jdihedral in self.graft_.polyITP_.dihedrals:
-					FO.write(f"{jdihedral._ix[0]+1+dihedral_shift} {jdihedral._ix[3]+1+dihedral_shift} {1}\n")
+					for jdihedral in self.graft_.polyITP_.dihedrals:
+						FO.write(f"{jdihedral._ix[0]+1+dihedral_shift} {jdihedral._ix[3]+1+dihedral_shift} {1}\n")
 
 	def toPDB(self, fname):
 
@@ -487,74 +503,79 @@ class polyGraft():
 	def toRTP(self, fname):
 		# generate the residue definition
 
-		BBP_G_atoms, BBP_G_bonds = gen_BBP_rtp(self.graft_.Nrepeats_, self.spacing_)
+		if isinstance(self.center_, Crystal):
+			print(f"Generation of rtp file for poly-g-hard brush is not available by this function! Directly generate gro and itp file!")
+			sys.exit(0)			
 
-		with open(fname, 'w') as FO:
-			# header
-			FO.write("[ bondedtypes ]\n")
-			FO.write("; bonds  angles  dihedrals  impropers all_dihedrals nrexcl HH14 RemoveDih\n")
-			FO.write("     1       1          3          1	    1         3      1     0\n")
-			FO.write("\n")
+		else:
+			BBP_G_atoms, BBP_G_bonds = gen_BBP_rtp(self.graft_.Nrepeats_, self.spacing_)
 
-			for i in range(3):
-				FO.write(f"[ BTB{i+1} ]\n")
-
-				# ------------------------------ write atoms
-				FO.write(" [ atoms ]\n")
-
-				# BTB1
-				if i==0:
-					if self.center_.topology_ == "linear":
-						FO.write(f"; CH3\n")
-						FO.write(f"C3{1} {res_rtp_dict['C3']}\n")
-						FO.write(f"HE{1} {res_rtp_dict['HE']}\n")
-						FO.write(f"HE{2} {res_rtp_dict['HE']}\n")
-						FO.write(f"HE{3} {res_rtp_dict['HE']}\n")
-
-				# BTB2
-				for iatom in BBP_G_atoms:
-					try: # if not H
-						FO.write(f"{iatom} {res_rtp_dict[iatom[:2]]}\n")
-					except:
-						FO.write(f"{iatom} {res_rtp_dict['H']}\n")
-
-				# BTB3
-				if i==2:
-					if self.center_.topology_ == "linear":
-						FO.write(f"; CH3\n")
-						FO.write(f"C3{1} {res_rtp_dict['C3']}\n")
-						FO.write(f"HE{1} {res_rtp_dict['HE']}\n")
-						FO.write(f"HE{2} {res_rtp_dict['HE']}\n")
-						FO.write(f"HE{3} {res_rtp_dict['HE']}\n")
-
-				# ------------------------------ write bonds
-				FO.write(" [ bonds ]\n")
-				if i==0:
-					if self.center_.topology_ == "linear":
-						# add head
-						FO.write(f"C3{1} {BBP_G_atoms[0]}\n")
-						FO.write(f"C3{1} HE{1}\n")
-						FO.write(f"C3{1} HE{2}\n")
-						FO.write(f"C3{1} HE{3}\n")
-						FO.write(f"{BBP_G_bonds[-1]}\n")
-
-				if i==2:
-					FO.write(f"{BBP_G_bonds[-2]}\n")
-
-				for ibond in BBP_G_bonds[:-2]:
-					FO.write(f"{ibond}\n")
-
-				if i==1:
-					FO.write(f"{BBP_G_bonds[-1]}\n")
-					FO.write(f"{BBP_G_bonds[-2]}\n")
-
-				if i==2:
-					if self.center_.topology_ == "linear":
-						# add head
-						FO.write(f"C3{1} {BBP_G_atoms[-4]}\n")
-						FO.write(f"C3{1} HE{1}\n")
-						FO.write(f"C3{1} HE{2}\n")
-						FO.write(f"C3{1} HE{3}\n")				
-
-				# add new line if the res is done
+			with open(fname, 'w') as FO:
+				# header
+				FO.write("[ bondedtypes ]\n")
+				FO.write("; bonds  angles  dihedrals  impropers all_dihedrals nrexcl HH14 RemoveDih\n")
+				FO.write("     1       1          3          1	    1         3      1     0\n")
 				FO.write("\n")
+
+				for i in range(3):
+					FO.write(f"[ BTB{i+1} ]\n")
+
+					# ------------------------------ write atoms
+					FO.write(" [ atoms ]\n")
+
+					# BTB1
+					if i==0:
+						if self.center_.topology_ == "linear":
+							FO.write(f"; CH3\n")
+							FO.write(f"C3{1} {res_rtp_dict['C3']}\n")
+							FO.write(f"HE{1} {res_rtp_dict['HE']}\n")
+							FO.write(f"HE{2} {res_rtp_dict['HE']}\n")
+							FO.write(f"HE{3} {res_rtp_dict['HE']}\n")
+
+					# BTB2
+					for iatom in BBP_G_atoms:
+						try: # if not H
+							FO.write(f"{iatom} {res_rtp_dict[iatom[:2]]}\n")
+						except:
+							FO.write(f"{iatom} {res_rtp_dict['H']}\n")
+
+					# BTB3
+					if i==2:
+						if self.center_.topology_ == "linear":
+							FO.write(f"; CH3\n")
+							FO.write(f"C3{1} {res_rtp_dict['C3']}\n")
+							FO.write(f"HE{1} {res_rtp_dict['HE']}\n")
+							FO.write(f"HE{2} {res_rtp_dict['HE']}\n")
+							FO.write(f"HE{3} {res_rtp_dict['HE']}\n")
+
+					# ------------------------------ write bonds
+					FO.write(" [ bonds ]\n")
+					if i==0:
+						if self.center_.topology_ == "linear":
+							# add head
+							FO.write(f"C3{1} {BBP_G_atoms[0]}\n")
+							FO.write(f"C3{1} HE{1}\n")
+							FO.write(f"C3{1} HE{2}\n")
+							FO.write(f"C3{1} HE{3}\n")
+							FO.write(f"{BBP_G_bonds[-1]}\n")
+
+					if i==2:
+						FO.write(f"{BBP_G_bonds[-2]}\n")
+
+					for ibond in BBP_G_bonds[:-2]:
+						FO.write(f"{ibond}\n")
+
+					if i==1:
+						FO.write(f"{BBP_G_bonds[-1]}\n")
+						FO.write(f"{BBP_G_bonds[-2]}\n")
+
+					if i==2:
+						if self.center_.topology_ == "linear":
+							# add head
+							FO.write(f"C3{1} {BBP_G_atoms[-4]}\n")
+							FO.write(f"C3{1} HE{1}\n")
+							FO.write(f"C3{1} HE{2}\n")
+							FO.write(f"C3{1} HE{3}\n")				
+
+					# add new line if the res is done
+					FO.write("\n")
