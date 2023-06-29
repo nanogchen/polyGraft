@@ -64,6 +64,18 @@ class polyGraft():
 		elif isinstance(self.center_, Polymer):
 			self.graftAtoms_ = self.center_.polyGRO_.select_atoms(f'name {atomname}')
 
+			# find the index of backbone atoms with grafts
+			self.centerGftedIdx_ = []
+			for i in range(self.graftAtoms_.n_atoms):
+				if i % self.spacing_ == 0:
+					self.centerGftedIdx_.append(self.graftAtoms_[i].index)
+
+			# remove Hydrogen bonded to graft atom if there is a graft
+			index_lst = list(set(self.center_.polyGRO_.atoms.indices)-set(np.array(self.centerGftedIdx_)+1))
+			
+			# the final structure poly-g-soft: initialized with the backbones
+			self.graftStruct_ = self.center_.polyGRO_.atoms[index_lst]
+			
 	def genGraftStruct(self):
 		# assemble two components together
 		
@@ -92,8 +104,6 @@ class polyGraft():
 	def graftSoft2Soft(self):
 		# for bottlebrush: generate the positions
 
-		self.centerGftedIdx_ = []
-		self.graftStruct_ = self.center_.polyGRO_.copy()
 		pos_all = []
 		atomnames_all = []
 
@@ -102,7 +112,6 @@ class polyGraft():
 
 			# add side chain if satisfy the criteria
 			if i % self.spacing_ == 0:
-				self.centerGftedIdx_.append(i+1)
 				gft_pt = self.graftAtoms_[i].position
 				i_gft = self.graft_.polyGRO_.copy()
 

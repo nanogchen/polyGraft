@@ -17,6 +17,7 @@
 # bond/angle parameters from opls-aa
 pars_dict = {
 	"CC" : 1.529,
+	"CH" : 1.09,
 	"CO" : 1.41,
 	"OC" : 1.41,
 	"OCC" : 109.5,
@@ -152,12 +153,24 @@ class Polymer():
 						pos.append([xc,yc,zc])
 						atomnames.append('C')
 
+						# Hydrogen-s
+						pos.append([xc,yc,zc+pars_dict['CH']])
+						pos.append([xc,yc,zc-pars_dict['CH']])
+						atomnames.append('H')
+						atomnames.append('H')
+
 						# second carbon
 						xc = x_inc+dx
 						yc = -dy
 						zc = 0.0
 						pos.append([xc,yc,zc])
 						atomnames.append('C')
+
+						# Hydrogen-s
+						pos.append([xc,yc,zc+pars_dict['CH']])
+						pos.append([xc,yc,zc-pars_dict['CH']])
+						atomnames.append('H')
+						atomnames.append('H')
 
 						# oxygen
 						xc = x_inc+2*dx
@@ -174,6 +187,12 @@ class Polymer():
 						pos.append([xc,yc,zc])
 						atomnames.append('C')
 
+						# Hydrogen-s
+						pos.append([xc,yc,zc+pars_dict['CH']])
+						pos.append([xc,yc,zc-pars_dict['CH']])
+						atomnames.append('H')
+						atomnames.append('H')
+
 						# second carbon
 						xc = x_inc+dx
 						yc = 0.0
@@ -181,12 +200,23 @@ class Polymer():
 						pos.append([xc,yc,zc])
 						atomnames.append('C')
 
+						# Hydrogen-s
+						pos.append([xc,yc,zc+pars_dict['CH']])
+						pos.append([xc,yc,zc-pars_dict['CH']])
+						atomnames.append('H')
+						atomnames.append('H')
+
 						# oxygen
 						xc = x_inc+2*dx
 						yc = -dy
 						zc = 0.0
 						pos.append([xc,yc,zc])
 						atomnames.append('O')
+
+				# add last H with end O
+				pos.append([xc,yc,zc+pars_dict['CH']])
+				atomnames.append('H')
+
 			else:
 				print(f"Cyclic PEO is not available! Exiting...")
 				sys.exit(0)
@@ -195,8 +225,19 @@ class Polymer():
 
 			if topology == 'linear':
 				# add head group
-				pos.append([0.0, 0.0, 0.0])
+				xc = 0.0
+				yc = 0.0
+				zc = 0.0
+				pos.append([xc, yc, zc])
 				atomnames.append('C')
+
+				# Hydrogen-s
+				pos.append([xc,yc,zc+pars_dict['CH']])
+				pos.append([xc,yc,zc-pars_dict['CH']])
+				pos.append([xc-pars_dict['CH'],yc,zc])
+				atomnames.append('H')
+				atomnames.append('H')
+				atomnames.append('H')
 
 				# the basic length
 				dx = pars_dict['CC']*math.cos(deg2rad(90.0-0.5*pars_dict['CCC']))
@@ -212,6 +253,12 @@ class Polymer():
 					pos.append([xc,yc,zc])
 					atomnames.append('C')
 
+					# Hydrogen-s
+					pos.append([xc,yc,zc+pars_dict['CH']])
+					pos.append([xc,yc,zc-pars_dict['CH']])
+					atomnames.append('H')
+					atomnames.append('H')
+
 					# second carbon
 					xc = x_inc+2*dx
 					yc = 0.0
@@ -219,13 +266,29 @@ class Polymer():
 					pos.append([xc,yc,zc])
 					atomnames.append('C')
 
+					# Hydrogen-s
+					pos.append([xc,yc,zc-pars_dict['CH']])
+					atomnames.append('H')
+
 					# oxygen
 					pos.append([xc,yc+pars_dict["OC"],zc])
 					atomnames.append('O')
 
+					# Hydrogen-s
+					pos.append([xc,yc+pars_dict["OC"],zc-pars_dict['CH']])
+					atomnames.append('H')
+
 				# add tail
 				pos.append([xc+dx, -dy, 0.0])
 				atomnames.append('C')
+
+				# Hydrogen-s
+				pos.append([xc+dx, -dy,pars_dict['CH']])
+				pos.append([xc+dx, -dy,-pars_dict['CH']])
+				pos.append([xc+dx+pars_dict['CH'],-dy,0.0])
+				atomnames.append('H')
+				atomnames.append('H')
+				atomnames.append('H')
 
 			elif topology == 'cyclic':
 				rad = getRadius(Nrepeats)
