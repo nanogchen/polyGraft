@@ -41,6 +41,10 @@ class polyGraft():
 		self.grafts_all_pos_ = None
 		self.centerGftedIdx_ = None # substrate atoms to be grafted with grafts
 
+		# atom groups
+		self.centerAtmGrp_ = None
+		self.graftAtmGrp_ = None
+
 	def setGraftingDensity(self, graftingDensity):
 		if isinstance(self.center_, Crystal):
 			assert graftingDensity < 0.06, f"Grafting density cannot be too large (smaller than 0.06 A^-2)!"
@@ -75,6 +79,7 @@ class polyGraft():
 			
 			# the final structure poly-g-soft: initialized with the backbones
 			self.graftStruct_ = self.center_.polyGRO_.atoms[index_lst]
+			self.centerAtmGrp_ = self.center_.polyGRO_.atoms[index_lst]
 			
 	def genGraftStruct(self):
 		# assemble two components together
@@ -108,10 +113,12 @@ class polyGraft():
 		atomnames_all = []
 
 		# loop over the graft points
+		ngrafts = 0
 		for i in range(self.graftAtoms_.n_atoms):
 
 			# add side chain if satisfy the criteria
 			if i % self.spacing_ == 0:
+				ngrafts += 1
 				gft_pt = self.graftAtoms_[i].position
 				i_gft = self.graft_.polyGRO_.copy()
 
@@ -135,6 +142,12 @@ class polyGraft():
 				i_gft.load_new(pos_new, order='fac')
 
 				self.graftStruct_ = mda.Merge(self.graftStruct_.atoms, i_gft.atoms)
+
+				if ngrafts == 1:
+					self.graftAtmGrp_ = i_gft.copy()
+
+				else:
+					self.graftAtmGrp_ = mda.Merge(self.graftAtmGrp_.atoms, i_gft.atoms)
 
 	def graftSoft2Hard(self):
 		
@@ -510,7 +523,19 @@ class polyGraft():
 	def toPDB(self, fname):
 
 		if self.graftStruct_ is not None:
-			self.graftStruct_.atoms.write(fname)
+			# self.graftStruct_.atoms.write(fname)
+
+			# to match with rtp define, use the order [bb, sc, bb-H, sc-H]
+			bb_main_atoms = self.centerAtmGrp_.select_atoms('name C O')
+			bb_h_atoms = self.centerAtmGrp_.select_atoms('name H')
+			sc_main_atoms = self.graftAtmGrp_.select_atoms('name C O')
+			sc_h_atoms = self.graftAtmGrp_.select_atoms('name H')
+
+			outAtms = mda.Merge(bb_main_atoms.atoms, sc_main_atoms.atoms)
+			outAtms = mda.Merge(outAtms.atoms, bb_h_atoms.atoms)
+			outAtms = mda.Merge(outAtms.atoms, sc_h_atoms.atoms)
+
+			outAtms.atoms.write(fname)
 
 		else:
 			print(f"The graft structure is None! Cannot write pdb file. Exiting")
