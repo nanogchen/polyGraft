@@ -85,11 +85,11 @@ if __name__ == '__main__':
 	gft = 1.0
 	pva_g_peo.setGraftingDensity(gft)
 
-	# generate the graft structure
+	# select atoms to be grafted and generate the graft structure
 	pva_g_peo.setGftAtoms('O')
 	pva_g_peo.genGraftStruct()
 
-	# # save pdb and rtp files
+	# save pdb and rtp files
 	pva_g_peo.toPDB(f"{topology}-PVA{NPVA}_PEO{NPEO}_sigma_{gft}.pdb")
 	pva_g_peo.toRTP(f"{topology}-PVA{NPVA}_PEO{NPEO}_sigma_{gft}.rtp")
 ```
