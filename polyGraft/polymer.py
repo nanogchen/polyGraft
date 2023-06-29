@@ -25,7 +25,7 @@ pars_dict = {
 	"CCC" : 112.7
 }
 
-from utils import rad2deg,deg2rad
+from utils import rad2deg,deg2rad,getTransformationMat
 import MDAnalysis as mda
 import numpy as np
 import math
@@ -61,6 +61,11 @@ class Polymer():
 
 		# center the polymer
 		self.center2graft()
+		# self.polyGRO_.atoms.write(f"test_centered.pdb")
+
+		# align the minimum Rg axis to the x-axis (defaults)
+		self.align(self.getOrient(), np.array([1, 0, 0]))
+		# self.polyGRO_.atoms.write(f"test_aligned.pdb")
 
 	def readITP(self, ITPfile):
 		# read from files
@@ -72,7 +77,7 @@ class Polymer():
 		when polymer is aligned in a direction, 
 		then the component in that direction is the smallest. 
 		then the ref direction is the third principal axis, 
-		the arrow is point from sulfur to the com"""
+		the arrow is point from starting atom to the com"""
 		
 		_,_,e3 = self.polyGRO_.atoms.principal_axes()
 
@@ -95,7 +100,8 @@ class Polymer():
 
 	def updatePos(self, pos):
 		assert pos.shape[0] == self.polyGRO_.atoms.n_atoms, f"The given position should have the same length as the NO. of atoms!"
-		self.polyGRO_.atoms.positions = pos
+		assert pos.shape[1] == 3, f"The input position array should be three dimensional (x/y/z)! Exiting..."
+		self.polyGRO_.load_new(pos, order='fac')
 
 	def center2graft(self):
 		"""
@@ -103,14 +109,21 @@ class Polymer():
 		"""
 
 		pos = self.polyGRO_.atoms.positions
-		self.polyGRO_.atoms.positions = pos - self.polyGRO_.atoms.positions[0]
+		self.polyGRO_.load_new(pos - self.polyGRO_.atoms.positions[0], order='fac')
 
-	def align(self, principal_axes_idx, ref_direction):
-		"""align one principal axis of a polymer to a given direction """
+	def align(self, principal_axes, ref_direction):
+		"""align one principal axis of a polymer to a given direction 
+		https://docs.mdanalysis.org/1.0.0/documentation_pages/core/topologyattrs.html?highlight=principal%20axes#MDAnalysis.core.topologyattrs.Masses.principal_axes
+		"""
 
-		assert principal_axes_idx in [0,1,2], f"Only 0/1/2 of the axis is allowed for align the polymer!"
+		# # 0 is the longest axis
+		# assert principal_axes_idx in [0,1,2], f"Only 0/1/2 of the axis is allowed for align the polymer!"
+		# self.polyGRO_.atoms.align_principal_axis(principal_axes_idx, ref_direction)
 
-		self.polyGRO_.atoms.align_principal_axis(principal_axes_idx, ref_direction)
+		# use self-coded way
+		RotMat,_ = getTransformationMat(principal_axes, ref_direction)
+		updated_post = np.transpose(np.matmul(RotMat, np.transpose(np.array(self.polyGRO_.atoms.positions))))
+		self.polyGRO_.load_new(updated_post, order='fac')
 
 	def gen_pos(self, Nrepeats, topology='linear'):
 		# generate the position of the given polymer: heavy atoms only (hydrogen will be taken care of by Avogadro)
