@@ -24,7 +24,7 @@ if __name__ == '__main__':
 	pva_g_peo = polyGraft(pva, peo)
 
 	# set grafting density: grafts/monomer
-	gft = 1.0
+	gft = 0.5
 	pva_g_peo.setGraftingDensity(gft)
 
 	# generate the graft structure

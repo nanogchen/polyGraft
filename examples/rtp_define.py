@@ -129,8 +129,10 @@ def findGft(Nbb,gft_density):
 
 	return gft_idx
 
-def PDBwrap(pdbfile, BTB_G_atoms, Ngrafts):
+def PDBwrap(fname, raw_uni, Nsc, spacing, Ngrafts):
 	# wrap up pdb files of updated molecular file (after added Hydrogen in Avogadro)
+
+	BTB_G_atoms, _ = gen_BBP_rtp(Nsc, spacing)
 
 	# get res for 1/2/3
 	BTB2_G = BTB_G_atoms.copy()
@@ -140,10 +142,9 @@ def PDBwrap(pdbfile, BTB_G_atoms, Ngrafts):
 	BTB3_G.extend(['C31','HE1','HE2','HE3'])
 
 	# read in the updated pdb file
-	raw_pdb = mda.Universe(pdbfile)
-	C_pos = raw_pdb.select_atoms('name C').positions.tolist()
-	O_pos = raw_pdb.select_atoms('name O').positions.tolist()
-	H_pos = raw_pdb.select_atoms('name H').positions.tolist()
+	C_pos = raw_uni.select_atoms('name C').positions.tolist()
+	O_pos = raw_uni.select_atoms('name O').positions.tolist()
+	H_pos = raw_uni.select_atoms('name H').positions.tolist()
 
 	# use a dict to save the xyz
 	all_pos = {'O':O_pos,\
@@ -151,8 +152,7 @@ def PDBwrap(pdbfile, BTB_G_atoms, Ngrafts):
 			   'H':H_pos}
 
 	# residues: BTB1 (1) + BTB2 (N-2) + BTB3 (1)	
-	outfile = pdbfile.split('.pdb')[0] + "_wraped.pdb"	
-	with open(outfile, 'w') as FO:
+	with open(fname, 'w') as FO:
 
 		# header
 		FO.write("TITLE Write by polyGraft-pdbwrap \n")
@@ -217,27 +217,3 @@ def PDBwrap(pdbfile, BTB_G_atoms, Ngrafts):
 
 # ------------------------------------------------------------------		
 
-if __name__ == '__main__':
-	
-	if len(sys.argv) != 5:
-		print(f"Right call: {sys.argv[0]} + Nbb + Nsc + graftingDensity + BBP-pdb-file(after Avogadro)!")
-		sys.exit(0)
-
-	Nbb = int(sys.argv[1])
-	Nsc = int(sys.argv[2])
-	gft_density = float(sys.argv[3])
-	pdbfile = sys.argv[4]
-
-	# check the parameters
-	Ngrafts = Nbb*gft_density
-	assert math.ceil(Ngrafts)-Ngrafts<1e-4, "The selection of backbone length and grafting density does not lead to complete residue! Exiting..."
-
-	# get the residue definition
-	spacing = int(1/gft_density)
-	BTB_G_atoms, _ = gen_BBP_rtp(Nsc, spacing)
-
-	# find the index of backbone that has grafts
-	gft_res_idx = findGft(Nbb, gft_density)
-
-	# write the pdb for gromacs 
-	PDBwrap(pdbfile, BTB_G_atoms, len(gft_res_idx))

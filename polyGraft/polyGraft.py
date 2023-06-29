@@ -17,7 +17,7 @@
 import math
 import sys
 sys.path.insert(0, "../examples/")
-from rtp_define import gen_BBP_rtp, res_rtp_dict
+from rtp_define import gen_BBP_rtp, res_rtp_dict, PDBwrap
 import numpy as np
 import MDAnalysis as mda
 from polymer import Polymer,pars_dict
@@ -73,6 +73,9 @@ class polyGraft():
 			for i in range(self.graftAtoms_.n_atoms):
 				if i % self.spacing_ == 0:
 					self.centerGftedIdx_.append(self.graftAtoms_[i].index)
+
+			# the total number of grafts
+			self.Ngrafts_ = len(self.centerGftedIdx_)
 
 			# remove Hydrogen bonded to graft atom if there is a graft
 			index_lst = list(set(self.center_.polyGRO_.atoms.indices)-set(np.array(self.centerGftedIdx_)+1))
@@ -535,7 +538,9 @@ class polyGraft():
 			outAtms = mda.Merge(outAtms.atoms, bb_h_atoms.atoms)
 			outAtms = mda.Merge(outAtms.atoms, sc_h_atoms.atoms)
 
-			outAtms.atoms.write(fname)
+			# write out pdb file: the same as old approach (main atoms of bb/sc and wrap up in Avogadro)
+			# outAtms.atoms.write(fname)
+			PDBwrap(fname, outAtms, self.graft_.Nrepeats_, self.spacing_, self.Ngrafts_)
 
 		else:
 			print(f"The graft structure is None! Cannot write pdb file. Exiting")
