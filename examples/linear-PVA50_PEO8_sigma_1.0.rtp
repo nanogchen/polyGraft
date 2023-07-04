@@ -70,14 +70,14 @@ H30 opls_185    0.06    1
 CS16 opls_182    0.12    1
 H31 opls_185    0.06    1
 H32 opls_185    0.06    1
-OH opls_154   -0.68    1
-HO opls_155    0.44    1
+OA opls_154   -0.68    1
+HA opls_155    0.44    1
  [ bonds ]
 C31 C21
 C31 HE1
 C31 HE2
 C31 HE3
-CT2 +C21
+CT1 +C21
 C21 HP1
 C21 HP2
 C21 CT1
@@ -138,8 +138,8 @@ CS15 H30
 CS15 CS16
 CS16 H31
 CS16 H32
-CS16 OH
-OH HO
+CS16 OA
+OA HA
 
 [ BTB2 ]
  [ atoms ]
@@ -204,8 +204,8 @@ H30 opls_185    0.06    1
 CS16 opls_182    0.12    1
 H31 opls_185    0.06    1
 H32 opls_185    0.06    1
-OH opls_154   -0.68    1
-HO opls_155    0.44    1
+OA opls_154   -0.68    1
+HA opls_155    0.44    1
  [ bonds ]
 C21 HP1
 C21 HP2
@@ -267,10 +267,10 @@ CS15 H30
 CS15 CS16
 CS16 H31
 CS16 H32
-CS16 OH
-OH HO
-CT2 +C21
--CT2 C21
+CS16 OA
+OA HA
+CT1 +C21
+-CT1 C21
 
 [ BTB3 ]
  [ atoms ]
@@ -335,15 +335,15 @@ H30 opls_185    0.06    1
 CS16 opls_182    0.12    1
 H31 opls_185    0.06    1
 H32 opls_185    0.06    1
-OH opls_154   -0.68    1
-HO opls_155    0.44    1
+OA opls_154   -0.68    1
+HA opls_155    0.44    1
 ; CH3
 C31 opls_135   -0.18    1
 HE1 opls_140    0.06    1
 HE2 opls_140    0.06    1
 HE3 opls_140    0.06    1
  [ bonds ]
--CT2 C21
+-CT1 C21
 C21 HP1
 C21 HP2
 C21 CT1
@@ -404,9 +404,9 @@ CS15 H30
 CS15 CS16
 CS16 H31
 CS16 H32
-CS16 OH
-OH HO
-C31 H31
+CS16 OA
+OA HA
+C31 CT1
 C31 HE1
 C31 HE2
 C31 HE3

@@ -303,6 +303,12 @@ class Polymer():
 					pos.append([xc,yc,zc])
 					atomnames.append('C')
 
+					# Hydrogen-s
+					pos.append([xc,yc,zc+pars_dict['CH']])
+					pos.append([xc,yc,zc-pars_dict['CH']])
+					atomnames.append('H')
+					atomnames.append('H')
+
 					# second carbon
 					xc = rad*math.cos((2*iatom+1)*theta)
 					yc = rad*math.sin((2*iatom+1)*theta)
@@ -310,9 +316,17 @@ class Polymer():
 					pos.append([xc,yc,zc])
 					atomnames.append('C')
 
+					# Hydrogen-s
+					pos.append([xc,yc,zc-pars_dict['CH']])
+					atomnames.append('H')
+
 					# oxygen
 					pos.append([xc,yc,zc+pars_dict["OC"]])
 					atomnames.append('O')
+
+					# Hydrogen-s
+					pos.append([xc,yc,zc+pars_dict["OC"]+pars_dict["CH"]])
+					atomnames.append('H')
 
 			else:
 				print(f"Unknown topology type ({topology}) other than linear and cyclic! Exiting...")

@@ -17,7 +17,7 @@
 import math
 import sys
 sys.path.insert(0, "../examples/")
-from rtp_define import gen_BBP_rtp, res_rtp_dict, PDBwrap
+from rtp_define import gen_BBP_rtp, res_rtp_dict
 import numpy as np
 import MDAnalysis as mda
 from polymer import Polymer,pars_dict
@@ -93,21 +93,21 @@ class polyGraft():
 		elif isinstance(self.center_, Polymer):
 			self.graftSoft2Soft()
 
+			# # to match with rtp define, use the order [bb, sc, bb-H, sc-H]
+			# bb_main_atoms = self.centerAtmGrp_.select_atoms('name C O')
+			# bb_h_atoms = self.centerAtmGrp_.select_atoms('name H')
+			# sc_main_atoms = self.graftAtmGrp_.select_atoms('name C O')
+			# sc_h_atoms = self.graftAtmGrp_.select_atoms('name H')
+
+			# outAtms = mda.Merge(bb_main_atoms.atoms, sc_main_atoms.atoms)
+			# outAtms = mda.Merge(outAtms.atoms, bb_h_atoms.atoms)
+			# outAtms = mda.Merge(outAtms.atoms, sc_h_atoms.atoms)
+
+			# self.graftStruct_ = outAtms.copy()
+
 		else:
 			print(f"Unexpected object type of the center object ({self.center_}): must be one of Polymer or Crystal.")
 			sys.exit(0)
-
-		# # merge grafts and sub
-		# self.graftStruct_ = self.graft_.polyITP_
-
-		# for igraft in range(1, self.Ngrafts_):
-		# 	self.graftStruct_ = mda.Merge(self.graftStruct_.atoms, self.graft_.polyITP_.atoms)
-
-		# self.graftStruct_ = mda.Merge(self.graftStruct_.atoms, self.center_.crystal_.atoms)
-
-		# # set resid
-		# resid_lst = [1 for _ in range(self.graftStruct_.atoms.n_atoms)]
-		# self.graftStruct_.add_TopologyAttr('resid', resid_lst)
 
 	def graftSoft2Soft(self):
 		# for bottlebrush: generate the positions
@@ -526,25 +526,172 @@ class polyGraft():
 	def toPDB(self, fname):
 
 		if self.graftStruct_ is not None:
-			# self.graftStruct_.atoms.write(fname)
 
-			# to match with rtp define, use the order [bb, sc, bb-H, sc-H]
-			bb_main_atoms = self.centerAtmGrp_.select_atoms('name C O')
-			bb_h_atoms = self.centerAtmGrp_.select_atoms('name H')
-			sc_main_atoms = self.graftAtmGrp_.select_atoms('name C O')
-			sc_h_atoms = self.graftAtmGrp_.select_atoms('name H')
+			# write out pdb file: wrap up atom/residue names
+			self.PDBwrap(fname)
 
-			outAtms = mda.Merge(bb_main_atoms.atoms, sc_main_atoms.atoms)
-			outAtms = mda.Merge(outAtms.atoms, bb_h_atoms.atoms)
-			outAtms = mda.Merge(outAtms.atoms, sc_h_atoms.atoms)
-
-			# write out pdb file: the same as old approach (main atoms of bb/sc and wrap up in Avogadro)
-			# outAtms.atoms.write(fname)
-			PDBwrap(fname, outAtms, self.graft_.Nrepeats_, self.spacing_, self.Ngrafts_)
+			# topology needed to add 
+			self.checkTOP(self.center_.topology_)
 
 		else:
 			print(f"The graft structure is None! Cannot write pdb file. Exiting")
 			sys.exit(0)
+
+	def PDBwrap(self, fname):
+	# wrap up pdb files of updated molecular file (after added Hydrogen in Avogadro)
+
+		BTB_G_atoms, _ = gen_BBP_rtp(self.graft_.Nrepeats_, self.spacing_)
+
+		# get res for 1/2/3
+		BTB2_G = BTB_G_atoms.copy()
+		if self.center_.topology_ == 'linear':
+			BTB1_G = ['C31','HE1','HE2','HE3']
+			BTB1_G.extend(BTB_G_atoms)
+			BTB3_G = BTB_G_atoms.copy()
+			BTB3_G.extend(['C31','HE1','HE2','HE3'])
+		else:
+			BTB1_G = BTB_G_atoms.copy()
+			BTB3_G = BTB_G_atoms.copy()
+
+		# check if the length matches
+		# assert len(BTB1_G)+len(BTB2_G)*(self.Ngrafts_-2)+len(BTB3_G) == self.centerAtmGrp_.atoms.n_atoms + self.graftAtmGrp_.atoms.n_atoms, f"Atom names length {len(BTB1_G)+len(BTB2_G)+len(BTB3_G)} should have the same length as the NO. of atoms {self.centerAtmGrp_.atoms.n_atoms + self.graftAtmGrp_.atoms.n_atoms}!"
+
+		# read in the updated pdb file
+		C_pos_bb = self.centerAtmGrp_.select_atoms('name C').positions.tolist()
+		O_pos_bb = self.centerAtmGrp_.select_atoms('name O').positions.tolist()
+		H_pos_bb = self.centerAtmGrp_.select_atoms('name H').positions.tolist()
+
+		C_pos_sc = self.graftAtmGrp_.select_atoms('name C').positions.tolist()
+		O_pos_sc = self.graftAtmGrp_.select_atoms('name O').positions.tolist()
+		H_pos_sc = self.graftAtmGrp_.select_atoms('name H').positions.tolist()
+
+		# bb or sc atoms
+		bb_lst = ['C3', 'C2', 'CT','OH', 'HE', 'HT','HP','HO']
+		sc_lst = ['CS', 'OP', 'OA', 'HA','H1','H2','H3','H4','H5','H6','H7','H8','H9'] 
+
+		# use a dict to save the xyz
+		all_pos_bb = {'O':O_pos_bb,\
+				   'C':C_pos_bb,\
+				   'H':H_pos_bb}
+
+		all_pos_sc = {'O':O_pos_sc,\
+				   'C':C_pos_sc,\
+				   'H':H_pos_sc}
+
+		# residues: BTB1 (1) + BTB2 (N-2) + BTB3 (1)	
+		with open(fname, 'w') as FO:
+
+			# header
+			FO.write("TITLE Write by polyGraft-pdbwrap \n")
+
+			# atomidx
+			atomid = 0
+
+			# out variables
+			rectype = 'ATOM'
+
+			# loop over residues
+			for i_Gft in range(self.Ngrafts_):
+				resid = i_Gft+1
+
+				# BTB1
+				if i_Gft == 0:
+
+					for atom_idx in range(len(BTB1_G)):
+						atomid += 1
+						atomname =  BTB1_G[atom_idx]
+						resname = 'BTB1'
+						if atomname[:2] in bb_lst:
+							xyz = all_pos_bb[BTB1_G[atom_idx][0]].pop(0)
+						elif atomname[:2] in sc_lst:
+							if atomname == 'OP1':
+								xyz = all_pos_bb[BTB1_G[atom_idx][0]].pop(0)
+							else:
+								xyz = all_pos_sc[BTB1_G[atom_idx][0]].pop(0)
+
+						occ = 	  1.00
+						tempfac = 0.00
+						element = BTB1_G[atom_idx][0]
+
+						FO.write("{:<6s}{:>5d} {:>4s} {:>3s} {:>4d}    {:>8.3f}{:>8.3f}{:>8.3f}{:>6.2f}{:>6.2f}{:>12s}\n".format(\
+								rectype, atomid, atomname, resname, resid, xyz[0], xyz[1], xyz[2],occ,tempfac,element))
+
+				# BTB3
+				elif i_Gft == self.Ngrafts_-1:
+
+					for atom_idx in range(len(BTB3_G)):
+						atomid += 1
+						atomname =  BTB3_G[atom_idx]
+						resname = 'BTB3'
+						if atomname[:2] in bb_lst:
+							xyz = all_pos_bb[BTB3_G[atom_idx][0]].pop(0)
+						elif atomname[:2] in sc_lst:
+							if atomname == 'OP1':
+								xyz = all_pos_bb[BTB3_G[atom_idx][0]].pop(0)
+							else:
+								xyz = all_pos_sc[BTB3_G[atom_idx][0]].pop(0)
+
+						occ = 	  1.00
+						tempfac = 0.00
+						element = BTB3_G[atom_idx][0]
+
+						FO.write("{:<6s}{:>5d} {:>4s} {:>3s} {:>4d}    {:>8.3f}{:>8.3f}{:>8.3f}{:>6.2f}{:>6.2f}{:>12s}\n".format(\
+								rectype, atomid, atomname, resname, resid, xyz[0], xyz[1], xyz[2],occ,tempfac,element))
+
+				# BTB2
+				else:
+
+					for atom_idx in range(len(BTB2_G)):
+						atomid += 1
+						atomname =  BTB2_G[atom_idx]
+						resname = 'BTB2'
+						if atomname[:2] in bb_lst:
+							xyz = all_pos_bb[BTB2_G[atom_idx][0]].pop(0)
+						elif atomname[:2] in sc_lst:
+							if atomname == 'OP1':
+								xyz = all_pos_bb[BTB2_G[atom_idx][0]].pop(0)
+							else:
+								xyz = all_pos_sc[BTB2_G[atom_idx][0]].pop(0)
+
+						occ = 	  1.00
+						tempfac = 0.00
+						element = BTB2_G[atom_idx][0]
+
+						FO.write("{:<6s}{:>5d} {:>4s} {:>3s} {:>4d}    {:>8.3f}{:>8.3f}{:>8.3f}{:>6.2f}{:>6.2f}{:>12s}\n".format(\
+								rectype, atomid, atomname, resname, resid, xyz[0], xyz[1], xyz[2],occ,tempfac,element))
+
+			# end
+			FO.write("END\n")
+
+	def checkTOP(self, topology):
+		# topology needed to add for cyclic bbps
+
+		if topology == "cyclic":
+			fname = "Nbb"+str(self.center_.Nrepeats_)+"_Nsc"+str(self.graft_.Nrepeats_)+"_to_add_cyclic.top"
+			with open(fname, "w") as fo:
+
+				# index of head and tail
+				head = 1
+				Natoms_per_bb_monomer = self.center_.polyGRO_.atoms.n_atoms/self.center_.Nrepeats_
+
+				if self.centerGftedIdx_[-1] > (self.center_.Nrepeats_-1)*Natoms_per_bb_monomer:
+					# last c grafted
+					# backbone atoms - (Hs removed) + side chain atoms | atoms after the last monomer
+					tail = Natoms_per_bb_monomer*(self.center_.Nrepeats_-1) - (self.Ngrafts_-1) + self.graft_.polyGRO_.atoms.n_atoms*(self.Ngrafts_-1) + 4 
+				else:
+					tail = Natoms_per_bb_monomer*(self.center_.Nrepeats_-1) - (self.Ngrafts_) + self.graft_.polyGRO_.atoms.n_atoms*self.Ngrafts_ + 4
+
+				fo.write(f";bonds head-to-tail\n")
+				fo.write(f"{head:>5d}{int(tail):>6d}{1:>6d}\n")
+				fo.write(f"\n")
+				fo.write(f";angles head-to-tail\n")
+				fo.write(f"to add!\n")
+				fo.write(f"\n")
+				fo.write(f";dihedrals head-to-tail\n")
+				fo.write(f"to add!\n")
+				fo.write(f"\n")
+				fo.write(f";pairs 1-4 of dihedrals\n")
+				fo.write(f"to add!\n")
 
 	def toRTP(self, fname):
 		# generate the residue definition
@@ -605,7 +752,12 @@ class polyGraft():
 							FO.write(f"C3{1} HE{3}\n")
 							FO.write(f"{BBP_G_bonds[-1]}\n")
 
+						else:
+							# with next residue
+							FO.write(f"{BBP_G_bonds[-1]}\n")
+
 					if i==2:
+						# with previous residue
 						FO.write(f"{BBP_G_bonds[-2]}\n")
 
 					for ibond in BBP_G_bonds[:-2]:
@@ -618,7 +770,7 @@ class polyGraft():
 					if i==2:
 						if self.center_.topology_ == "linear":
 							# add head
-							FO.write(f"C3{1} {BBP_G_atoms[-4]}\n")
+							FO.write(f"C3{1} CT{self.spacing_}\n")
 							FO.write(f"C3{1} HE{1}\n")
 							FO.write(f"C3{1} HE{2}\n")
 							FO.write(f"C3{1} HE{3}\n")				
