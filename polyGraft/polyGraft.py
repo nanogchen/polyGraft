@@ -93,18 +93,6 @@ class polyGraft():
 		elif isinstance(self.center_, Polymer):
 			self.graftSoft2Soft()
 
-			# # to match with rtp define, use the order [bb, sc, bb-H, sc-H]
-			# bb_main_atoms = self.centerAtmGrp_.select_atoms('name C O')
-			# bb_h_atoms = self.centerAtmGrp_.select_atoms('name H')
-			# sc_main_atoms = self.graftAtmGrp_.select_atoms('name C O')
-			# sc_h_atoms = self.graftAtmGrp_.select_atoms('name H')
-
-			# outAtms = mda.Merge(bb_main_atoms.atoms, sc_main_atoms.atoms)
-			# outAtms = mda.Merge(outAtms.atoms, bb_h_atoms.atoms)
-			# outAtms = mda.Merge(outAtms.atoms, sc_h_atoms.atoms)
-
-			# self.graftStruct_ = outAtms.copy()
-
 		else:
 			print(f"Unexpected object type of the center object ({self.center_}): must be one of Polymer or Crystal.")
 			sys.exit(0)
@@ -493,7 +481,7 @@ class polyGraft():
 				FO.write(";sub-graft\n")
 				for ipoly in range(self.Ngrafts_):
 					poly_idx = 1+ipoly*self.graft_.polyITP_.atoms.n_atoms
-					FO.write(f"{poly_idx} {self.centerGftedIdx_[ipoly]} {1}\n")
+					FO.write(f"{poly_idx} {self.centerGftedIdx_[ipoly]+self.graft_.polyITP_.atoms.n_atoms*self.Ngrafts_} {1}\n")
 
 				# angles info
 				FO.write("\n")
@@ -552,9 +540,6 @@ class polyGraft():
 		else:
 			BTB1_G = BTB_G_atoms.copy()
 			BTB3_G = BTB_G_atoms.copy()
-
-		# check if the length matches
-		# assert len(BTB1_G)+len(BTB2_G)*(self.Ngrafts_-2)+len(BTB3_G) == self.centerAtmGrp_.atoms.n_atoms + self.graftAtmGrp_.atoms.n_atoms, f"Atom names length {len(BTB1_G)+len(BTB2_G)+len(BTB3_G)} should have the same length as the NO. of atoms {self.centerAtmGrp_.atoms.n_atoms + self.graftAtmGrp_.atoms.n_atoms}!"
 
 		# read in the updated pdb file
 		C_pos_bb = self.centerAtmGrp_.select_atoms('name C').positions.tolist()
