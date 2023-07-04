@@ -2,3 +2,4 @@ bin/atomsk
 polyGraft/__pycache__/
 examples/__pycache__/
 examples/test.py
+examples/test/

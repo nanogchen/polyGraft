@@ -1,0 +1,11 @@
+;bonds head-to-tail
+    1  3091     1
+
+;angles head-to-tail
+to add!
+
+;dihedrals head-to-tail
+to add!
+
+;pairs 1-4 of dihedrals
+to add!

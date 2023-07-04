@@ -667,7 +667,7 @@ class polyGraft():
 		# topology needed to add for cyclic bbps
 
 		if topology == "cyclic":
-			fname = "Nbb"+str(self.center_.Nrepeats_)+"_Nsc"+str(self.graft_.Nrepeats_)+"_to_add_cyclic.top"
+			fname = "Nbb"+str(self.center_.Nrepeats_)+"_Nsc"+str(self.graft_.Nrepeats_)+"_sigma"+str(self.graftingDensity_)+"_to_add_cyclic.top"
 			with open(fname, "w") as fo:
 
 				# index of head and tail

@@ -16,7 +16,7 @@ if __name__ == '__main__':
 	# generate PVA backbone
 	pva=Polymer(poly_name='PVA')
 	NPVA = 50
-	topology='linear'
+	topology='cyclic'
 	pva.gen_pos(Nrepeats=NPVA, topology=topology)
 	# pva.polyGRO_.atoms.write(f"PVA{NPVA}.pdb")
 
