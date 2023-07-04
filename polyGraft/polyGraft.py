@@ -60,6 +60,9 @@ class polyGraft():
 			# spacing 
 			self.spacing_ = int(1.0/graftingDensity)
 
+			# check the grafting density
+			assert self.center_.Nrepeats_ % self.spacing_ == 0, f"For bottlebrush generation, the backbone length ({self.center_.Nrepeats_}) should be N times of the spacing ({self.spacing_})!"
+
 	def setGftAtoms(self, atomname):
 		# set atoms of the substrate to be grafted
 		if isinstance(self.center_, Crystal):
