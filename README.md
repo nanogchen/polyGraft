@@ -1,4 +1,4 @@
-# polyGraft 1.0: a Program for Molecular Structure and Topology Generation of Polymer-Grafted Hybrid Nanostructures
+# polyGraft: a Program for Molecular Structure and Topology Generation of Polymer-Grafted Hybrid Nanostructures
 
 <img src="polyGraft.jpg" alt="drawing" width="600"/>
 
