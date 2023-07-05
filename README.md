@@ -15,7 +15,7 @@ Installation steps:
 NOTE: to use other polymers (rather than PEO) for polymer brush generation using polyGraft, one must provide the .gro and .itp files 
 
 # How to use
-Representative examples are given in the [**examples**](https://github.com/nanogchen/polyGraft/tree/main/examples) folder. Check it out! For any nanostructure generation, it takes two steps generally:
+Representative examples are given in the [**examples**](https://github.com/nanogchen/polyGraft/tree/main/examples) folder (check it out!) For any nanostructure generation, it takes two steps generally:
 1. generate the substrate lattice, and import polymer (gro and itp files);
 2. generate the structure (gro file) and topology (itp file) using polyGraft.
 
