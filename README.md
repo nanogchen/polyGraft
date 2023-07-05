@@ -12,7 +12,7 @@ Installation steps:
 2. download atomsk and place under /path/to/polyGraft/bin
 3. use polyGraft for generation under /path/to/polyGraft/examples
 
-NOTE: to use other polymers (rather than PEO) for polymer brush generation using polyGraft, one must provide the gro/itp files. 
+NOTE: to use other polymers (rather than PEO) for polymer brush generation using polyGraft, one must provide the gro/itp files of the polymer. 
 
 # How to cite
 1. Chen, Guang. "polyGraft: a Program for Molecular Structure and Topology Generation of Polymer-Grafted Hybrid Nanostructures". Submitted.
