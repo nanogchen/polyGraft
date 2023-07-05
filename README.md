@@ -12,7 +12,12 @@ Installation steps:
 2. download atomsk and place under /path/to/polyGraft/bin
 3. use polyGraft for generation under /path/to/polyGraft/examples
 
-NOTE: to use other polymers (rather than PEO) for polymer brush generation using polyGraft, one must provide the .gro and .itp files 
+NOTE: to use other polymers (rather than PEO) for polymer brush generation using polyGraft, one must provide the gro/itp files. 
+
+# How to cite
+1. Chen, Guang. "polyGraft: a Program for Molecular Structure and Topology Generation of Polymer-Grafted Hybrid Nanostructures". Submitted.
+2. Chen, Guang, and Elena E. Dormidontova. "Cyclic vs Linear Bottlebrush Polymers in Solution: Side-Chain Length Effect." Macromolecules 56.9 (2023): 3286–3295. https://doi.org/10.1021/acs.macromol.3c00362
+3. Chen, Guang, and Elena Dormidontova. "PEO-Grafted Gold Nanopore: Grafting Density, Chain Length, and Curvature Effects." Macromolecules 55.12 (2022): 5222-5232. https://doi.org/10.1021/acs.macromol.2c00323
 
 # How to use
 Representative examples are given in the [**examples**](https://github.com/nanogchen/polyGraft/tree/main/examples) folder (check it out!) For any nanostructure generation, it takes two steps generally:
@@ -93,8 +98,3 @@ if __name__ == '__main__':
 	pva_g_peo.toPDB(f"{topology}-PVA{NPVA}_PEO{NPEO}_sigma_{gft}.pdb")
 	pva_g_peo.toRTP(f"{topology}-PVA{NPVA}_PEO{NPEO}_sigma_{gft}.rtp")
 ```
-
-# How to cite
-1. Chen, Guang. "polyGraft: a Program for Molecular Structure and Topology Generation of Polymer-Grafted Hybrid Nanostructures". Submitted.
-2. Chen, Guang, and Elena E. Dormidontova. "Cyclic vs Linear Bottlebrush Polymers in Solution: Side-Chain Length Effect." Macromolecules 56.9 (2023): 3286–3295. https://doi.org/10.1021/acs.macromol.3c00362
-3. Chen, Guang, and Elena Dormidontova. "PEO-Grafted Gold Nanopore: Grafting Density, Chain Length, and Curvature Effects." Macromolecules 55.12 (2022): 5222-5232. https://doi.org/10.1021/acs.macromol.2c00323
