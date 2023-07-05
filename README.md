@@ -17,7 +17,7 @@ NOTE: to use other polymers (rather than PEO) for polymer brush generation using
 # How to use
 Representative examples are given in the [**examples**](https://github.com/nanogchen/polyGraft/tree/main/examples) folder (check it out!) For any nanostructure generation, it takes two steps generally:
 1. generate or import the substrate material (hard or soft), and polymer (gro and itp files);
-2. generate the structure (gro file) and topology (itp file) using polyGraft.
+2. generate the structure and topology using polyGraft. For poly-g-hard, the files are in gro/itp format, while for poly-g-soft, they are in pdb/rtp format.
 
 Using PEO-grafted gold nanoparticle as an example (poly-g-hard), the code is (MUST use under examples directory):
 ```python
