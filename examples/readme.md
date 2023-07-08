@@ -11,7 +11,7 @@ This is the run directory to generate the structure and topology of polymer-graf
   - bottlebrush polymer with cyclic backbone
 
 
-Note: there are two steps in the generation of poly-g-soft. First, use **genBBP.py** to generate the pdb and rtp file, then use _gmx pdb2gmx_ (Gromacs) to get the itp and gro file. For now, the grafting density ($\sigma$) of bottlebrush polymer cannot be arbitrary. One must ensure the backbone can be divided into equal lengths (_i.e._, N<sub>bb</sub> * $\sigma$ is an integer).
+Note: there are two steps in the generation of poly-g-soft. First, use **genBBP.py** to generate the pdb and rtp file, then use _gmx pdb2gmx_ (Gromacs) to get the itp and gro file. For now, the grafting density ($\sigma$) of bottlebrush polymer cannot be arbitrary. One must ensure the backbone can be divided into equal lengths (_i.e._, N<sub>bb</sub> * $\sigma$ is an integer and is evenly divisible to the spacing distance).
 
 Note: for cyclic bottlebrush polymers, there is a further step on the generated itp file by Gromacs. Add the bonding information produced in the ***_to_add_cyclic.top** file (in the file, only bond is given; if angles/dihedrals/pairs are also needed, add them as well).
 
