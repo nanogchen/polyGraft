@@ -99,5 +99,8 @@ if __name__ == '__main__':
 	pva_g_peo.toRTP(f"{topology}-PVA{NPVA}_PEO{NPEO}_sigma_{gft}.rtp")
 ```
 
+# Documentation
+Please refer to the documentation of the code [wiki](https://github.com/nanogchen/polyGraft/wiki)!
+
 # Seek help or new features
 Open an [issue](https://github.com/nanogchen/polyGraft/issues)!
