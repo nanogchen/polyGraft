@@ -14,6 +14,7 @@
 # GNU General Public License for more details.
 #
 
+import random
 import math
 import sys
 sys.path.insert(0, "../examples/")
@@ -87,20 +88,20 @@ class polyGraft():
 			self.graftStruct_ = self.center_.polyGRO_.atoms[index_lst]
 			self.centerAtmGrp_ = self.center_.polyGRO_.atoms[index_lst]
 			
-	def genGraftStruct(self):
+	def genGraftStruct(self, random_grafting=False):
 		# assemble two components together
 		
 		if isinstance(self.center_, Crystal):
-			self.graftSoft2Hard()
+			self.graftSoft2Hard(random_grafting)
 
 		elif isinstance(self.center_, Polymer):
-			self.graftSoft2Soft()
+			self.graftSoft2Soft(random_grafting)
 
 		else:
 			print(f"Unexpected object type of the center object ({self.center_}): must be one of Polymer or Crystal.")
 			sys.exit(0)
 
-	def graftSoft2Soft(self):
+	def graftSoft2Soft(self, random_grafting=False):
 		# for bottlebrush: generate the positions
 
 		pos_all = []
@@ -143,7 +144,7 @@ class polyGraft():
 				else:
 					self.graftAtmGrp_ = mda.Merge(self.graftAtmGrp_.atoms, i_gft.atoms)
 
-	def graftSoft2Hard(self):
+	def graftSoft2Hard(self, random_grafting):
 		
 		if self.center_.crystal_type_ == "nanoparticle":
 			self.particleGraft()			
@@ -155,13 +156,13 @@ class polyGraft():
 			self.rodGraft()
 
 		elif self.center_.crystal_type_ == "nanoslab":
-			self.slabGraft()
+			self.slabGraft(random_grafting)
 
 		else:
 			print(f"Unexpected crystal type of the center object ({self.center_.crystal_type_}): must be one of nanoparticle/nanopore/nanorod/nanoslab.")
 			sys.exit(0)
 	
-	def slabGraft(self):
+	def slabGraft(self, random_grafting=False):
 		# graft on the top surface of the slab
 
 		length = self.center_.pars_[0]
@@ -176,18 +177,29 @@ class polyGraft():
 		# initialize the pos
 		self.grafts_all_pos_ = np.zeros((self.Ngrafts_*self.graft_.polyGRO_.atoms.n_atoms,3))
 
-		# self.Natoms
+		# total number of atoms in the hybrid system
 		self.Natoms_ = self.graft_.polyGRO_.atoms.n_atoms*self.Ngrafts_ + self.center_.crystal_.atoms.n_atoms
 
-		# graft on the uppper side of the slab
+		# graft on the upper side of the slab
 		z = max(self.center_.crystal_.atoms.positions[:,2])
-		x = [0.5*self.spacing_ + i*self.spacing_ for i in range(Nchainsx)]
-		y = [0.5*self.spacing_ + i*self.spacing_ for i in range(Nchainsy)]
-	
 		graft_pts = []
-		for i in x:
-			for j in y:
-				graft_pts.append([i,j,z])
+
+		if random_grafting:
+			for _ in range(self.Ngrafts_):
+				random_x = random.random()
+				x = length*random_x
+				random_y = random.random()
+				y = width*random_y
+				graft_pts.append([x,y,z])
+
+		else:
+			x = [0.5*self.spacing_ + i*self.spacing_ for i in range(Nchainsx)]
+			y = [0.5*self.spacing_ + i*self.spacing_ for i in range(Nchainsy)]
+
+			for i in x:
+				for j in y:
+					graft_pts.append([i,j,z])
+
 		graft_pts = np.array(graft_pts)
 
 		# find grafted AU pos/index
