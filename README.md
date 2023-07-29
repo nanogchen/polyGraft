@@ -1,8 +1,8 @@
-# polyGraft: a Program for Molecular Structure and Topology Generation of Polymer-Grafted Hybrid Nanostructures
+# polyGraft: A Program for Molecular Structure and Topology Generation of Polymer-Grafted Hybrid Nanostructures
 
 <img src="polyGraft.jpg" alt="drawing" width="600"/>
 
-# Requisites
+# Prerequisites
 - [atomsk](https://atomsk.univ-lille.fr/) for hard substrate generation (any other tools should also be fine, save in pdb file format) (tested v0.12)
 - [MDAnalysis](https://www.mdanalysis.org/) file IO (tested v2.5.0)
 - [numba](https://numba.pydata.org/) accelerated array processing (tested v0.57.1)
@@ -12,7 +12,7 @@ Installation steps:
 2. download atomsk and place under /path/to/polyGraft/bin
 3. use polyGraft for generation under /path/to/polyGraft/examples
 
-NOTE: to use other polymers (rather than PEO) for polymer brush generation using polyGraft, one must provide the gro/itp files of the polymer. The user should be responsible for the results in this case as no validity checks on the input files were applied (i.e., validate the force field parameters and visualize the generated structure etc.)
+**NOTE**: to use other polymers (rather than PEO) for polymer brush generation using polyGraft, one must provide the gro/itp files of the polymer. The user should be responsible for the results in this case as no validity checks on the input files were applied (i.e., validate the force field parameters and visualize the generated structure etc.)
 
 # How to cite
 1. Chen, Guang. "polyGraft: a Program for Molecular Structure and Topology Generation of Polymer-Grafted Hybrid Nanostructures". Submitted.
