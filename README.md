@@ -7,10 +7,11 @@
 - [MDAnalysis](https://www.mdanalysis.org/) file IO (tested v2.5.0)
 - [numba](https://numba.pydata.org/) accelerated array processing (tested v0.57.1)
 
-Installation steps:
-1. create a python environment adding MDAnalysis, numba etc.
-2. download atomsk and place under /path/to/polyGraft/bin
-3. use polyGraft for generation under /path/to/polyGraft/examples
+Installation steps (tested with Anaconda):
+1. install [Anaconda](https://anaconda.org/)
+2. create a new environment adding MDAnalysis, numba etc.
+3. download atomsk and place under /path/to/polyGraft/bin
+4. use polyGraft for generation under /path/to/polyGraft/examples
 
 **NOTE**: to use other polymers (rather than PEO) for polymer brush generation using polyGraft, one must provide the gro/itp files of the polymer. The user should be responsible for the results in this case as no validity checks on the input files were applied (i.e., validate the force field parameters and visualize the generated structure etc.)
 
