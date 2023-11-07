@@ -9,7 +9,7 @@
 
 Installation steps (tested with Anaconda):
 1. install [Anaconda](https://anaconda.org/)
-2. create a new environment adding MDAnalysis, numba etc (conda install).
+2. create a new environment (see [here](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands)) adding MDAnalysis, numba etc (conda install).
 3. download atomsk and place under /path/to/polyGraft/bin
 4. use polyGraft for generation under /path/to/polyGraft/examples
 
