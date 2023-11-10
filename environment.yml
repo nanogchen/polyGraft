@@ -1,0 +1,9 @@
+name: polyGraft
+channels:
+  - conda-forge
+  - pypi
+dependencies:
+  - python=3.10.4
+  - conda-forge::numpy=1.22.*
+  - numba::numba=0.55.*
+  - mdanalysis=2.2.0
