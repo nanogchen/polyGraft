@@ -25,6 +25,7 @@ from polymer import Polymer,pars_dict
 from crystal import Crystal
 from atomsk import Atomsk
 from utils import getNN_two, getTransformationMat
+import utils
 
 class polyGraft():
 
@@ -68,6 +69,10 @@ class polyGraft():
 		# set atoms of the substrate to be grafted
 		if isinstance(self.center_, Crystal):
 			self.graftAtoms_ = self.center_.crystal_.select_atoms(f'name {atomname}')
+
+			# the final structure poly-g-soft: initialized with the backbones
+			self.graftStruct_ = self.center_.crystal_.atoms
+			self.centerAtmGrp_ = self.center_.crystal_.atoms
 
 		elif isinstance(self.center_, Polymer):
 			self.graftAtoms_ = self.center_.polyGRO_.select_atoms(f'name {atomname}')
@@ -275,6 +280,17 @@ class polyGraft():
 
 			ipos = np.matmul(poly_pos, RotMat) + np.tile(TransMat, (self.graft_.polyGRO_.atoms.n_atoms,1)) + np.tile(gld_gft_pts[ichain,:], ((self.graft_.polyGRO_.atoms.n_atoms,1)))
 			self.grafts_all_pos_[ichain*self.graft_.polyGRO_.atoms.n_atoms:(1+ichain)*self.graft_.polyGRO_.atoms.n_atoms, :] = ipos
+
+			i_gft = self.graft_.polyGRO_.copy()
+			i_gft.load_new(ipos, order='fac')
+
+			self.graftStruct_ = mda.Merge(self.graftStruct_.atoms, i_gft.atoms)
+
+			if ichain == 0:
+				self.graftAtmGrp_ = i_gft.copy()
+
+			else:
+				self.graftAtmGrp_ = mda.Merge(self.graftAtmGrp_.atoms, i_gft.atoms)
 
 	def poreGraft(self):
 		# graft on the inner surface of the pore
@@ -525,6 +541,117 @@ class polyGraft():
 
 					for jdihedral in self.graft_.polyITP_.dihedrals:
 						FO.write(f"{jdihedral._ix[0]+1+dihedral_shift} {jdihedral._ix[3]+1+dihedral_shift} {1}\n")
+
+	def toDATA(self, fname):
+		# write result to lammps data file
+
+		# change the atom type in letter to integers
+		atomtypes = self.graftStruct_.atoms.types
+		unique_atypes = list(set(atomtypes))
+		unique_atypes.sort()
+
+		unique_btypes = utils.getUniqueBondTypes(self.graftStruct_)
+		unique_btypes.sort()
+		# print(unique_btypes)
+
+		# define the atom types by idx
+		atomtype2index = {k:v+1 for v,k in enumerate(unique_atypes)}
+
+		# define the bond types by idx
+		bondtype2index = {k:v+1 for v,k in enumerate(unique_btypes)}
+		print(bondtype2index)
+
+		# # change the type
+		# for itype in type_dict.keys():
+		# 	Natoms_i = self.graftStruct_.select_atoms(f"type {itype}").n_atoms
+		# 	self.graftStruct_.select_atoms(f"type {itype}").types = [str(type_dict[itype]) for _ in range(Natoms_i)]
+
+		# # write the dictionary
+		# with open("polyGraft.prm", 'w') as fo:  
+		# 	for key, value in type_dict.items():  
+		# 		fo.write('%s:%s\n' % (key, value))
+
+		# # write data file using mda
+		# with mda.Writer(fname) as FO:
+		# 	FO.write(self.graftStruct_.atoms)
+
+		# in-house
+		with open(fname, 'w') as FO:
+
+			# add header
+			FO.write("lammps data file written by polyGraft \n")
+			FO.write(f"\n")			
+			FO.write(f"{self.graftStruct_.atoms.n_atoms} atoms\n")
+			FO.write(f"{len(self.center_.crystal_.bonds)+self.Ngrafts_+self.Ngrafts_*len(self.graft_.polyGRO_.bonds)} bonds\n")
+			FO.write(f"{len(self.graftStruct_.atoms.angles)} angles\n")
+			FO.write(f"{len(self.graftStruct_.atoms.dihedrals)} dihedrals\n")
+			FO.write(f"{len(self.graftStruct_.atoms.impropers)} impropers\n")
+			FO.write(f"\n")
+			FO.write(f"{len(unique_atypes)} atom types\n") 
+			FO.write(f"{len(unique_btypes)} bond types\n")
+			# if Nangletypes_per_chain != 0:
+			# 	FO.write(f"{Nangletypes_per_chain} angle types\n")
+			# if Ndihedraltypes_per_chain != 0:
+			# 	FO.write(f"{Ndihedraltypes_per_chain} dihedral types\n")
+			# if Nimpropertypes_per_chain != 0:
+			# 	FO.write(f"{Nimpropertypes_per_chain} improper types\n")
+
+			pos = self.graftStruct_.atoms.positions
+			box_max,box_min = np.amax(pos, axis=0), np.amin(pos, axis=0)
+			FO.write(f"\n")
+			FO.write(f"{box_min[0]-3:.3f} {box_max[0]+3:.3f} xlo xhi\n")
+			FO.write(f"{box_min[1]-3:.3f} {box_max[1]+3:.3f} ylo yhi\n")
+			FO.write(f"{box_min[2]-3:.3f} {box_max[2]+3:.3f} zlo zhi\n")
+			FO.write(f"\n")
+
+			# Atoms
+			FO.write(f"\n")
+			FO.write(f"Atoms\n")
+			FO.write(f"\n")
+
+			# write polymer first
+			polyGraft_pos = self.graftStruct_.atoms.positions
+			atomtypes_vec = self.graft_.polyGRO_.atoms.types
+			indexed_atomtypes_vec = [atomtype2index[i] for i in atomtypes_vec]
+			for ichain in range(self.Ngrafts_):
+				for atom_idx in range(self.graft_.polyGRO_.atoms.n_atoms):
+					g_idx = ichain*self.graft_.polyGRO_.atoms.n_atoms + atom_idx					
+					atomid = g_idx + 1
+
+					FO.write(f"{atomid} {ichain+1} {indexed_atomtypes_vec[atom_idx]} {self.graft_.polyGRO_.atoms.charges[atom_idx]:.3f} {polyGraft_pos[g_idx,0]:.3f} {polyGraft_pos[g_idx,1]:.3f} {polyGraft_pos[g_idx,2]:.3f}\n")
+
+			# write lattice 
+			ichain+=1
+			for idx in range(self.center_.crystal_.atoms.n_atoms):
+				g_idx = self.Ngrafts_*self.graft_.polyGRO_.atoms.n_atoms + idx
+				atomid = g_idx + 1
+
+				FO.write(f"{atomid} {ichain+1} {atomtype2index[self.center_.crystal_.atoms[0].type]} {self.graft_.polyGRO_.atoms.charges[atom_idx]:.3f} {polyGraft_pos[g_idx,0]:.3f} {polyGraft_pos[g_idx,1]:.3f} {polyGraft_pos[g_idx,2]:.3f}\n")
+
+			# Bonds
+			FO.write(f"\n")
+			FO.write(f"Bonds\n")
+			FO.write(f"\n")
+			# polymer first
+			nbonds = 0
+			for ichain in range(self.Ngrafts_):
+				bond_shift = ichain*self.graft_.polyITP_.atoms.n_atoms
+
+				for ibond in self.graft_.polyITP_.bonds:
+					nbonds += 1
+					FO.write(f"{nbonds} {ibond.type} {ibond._ix[0]+1+bond_shift} {ibond._ix[1]+1+bond_shift}\n")
+
+			# lattice
+			bond_shift += self.graft_.polyITP_.atoms.n_atoms
+			for jbond in self.center_.crystal_.bonds:
+				nbonds += 1
+				FO.write(f"{nbonds} {bondtype2index[jbond.type]} {jbond._ix[0]+1+bond_shift} {jbond._ix[1]+1+bond_shift}\n")
+
+			# polymer-lattice
+			for ipoly in range(self.Ngrafts_):
+				nbonds += 1
+				poly_idx = 1+ipoly*self.graft_.polyITP_.atoms.n_atoms
+				FO.write(f"{nbonds} {len(bondtype2index.keys())+1} {poly_idx} {self.centerGftedIdx_[ipoly]+self.graft_.polyITP_.atoms.n_atoms*self.Ngrafts_}\n")
 
 	def toPDB(self, fname):
 

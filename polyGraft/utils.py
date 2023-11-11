@@ -88,3 +88,11 @@ def rad2deg(rad):
 def deg2rad(deg):
 
 	return deg*math.pi/180.0
+
+def getUniqueBondTypes(mol):
+
+	bondtype = []
+	for ibond in mol.atoms.bonds:
+		bondtype.append(ibond.type)
+
+	return list(set(bondtype))	

@@ -90,6 +90,27 @@ class Crystal():
 			bonds_nn = bonds[~np.all(bonds == 0, axis=1)]
 
 			self.crystal_.add_TopologyAttr('bonds', bonds_nn)
+
+	def readDATA(self, fname, atom_style="id type x y z", guessing_bond=False, lattice_const=4.08):
+		# read lammps data file
+
+		# set crystal_ based on atomsk generated structure
+		self.crystal_ = mda.Universe(fname, atom_style=atom_style)
+		self.setAtomTypes()
+		self.setMass()
+		self.setCharge(0.0)
+
+		# generate nearest neighbors
+		if guessing_bond:
+
+			# bonds
+			xyz = self.crystal_.atoms.positions
+			bonds = getNN(xyz,lattice_const)
+
+			# find effective bonding
+			bonds_nn = bonds[~np.all(bonds == 0, axis=1)]
+
+			self.crystal_.add_TopologyAttr('bonds', bonds_nn)
 			
 	def setAtomTypes(self):
 		atom_types = [self.crystal_element_ for _ in range(self.crystal_.atoms.n_atoms)]

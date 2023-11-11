@@ -72,6 +72,26 @@ class Polymer():
 		# read from files
 		self.polyITP_ = mda.Universe(ITPfile, topology_format="ITP")
 
+	def readDATA(self, DATAfile, atom_style="id resid type x y z"):
+		# read lammps data file
+		self.polyITP_ = mda.Universe(DATAfile, atom_style=atom_style)
+		self.polyGRO_ = mda.Universe(DATAfile, atom_style=atom_style)
+
+		# center the polymer
+		self.center2graft()
+
+		# align the minimum Rg axis to the x-axis (defaults)
+		self.align(self.getOrient(), np.array([1, 0, 0]))
+
+		# set charge
+		self.setCharge(0.0)
+
+	def setCharge(self, charge=0.0):
+		"""set the atom mass of the crystal"""
+		atom_charges = [charge for _ in range(self.polyITP_.atoms.n_atoms)]
+		self.polyGRO_.add_TopologyAttr('charge', atom_charges)
+		self.polyITP_.add_TopologyAttr('charge', atom_charges)
+
 	def getOrient(self):
 
 		""" get the principal axis of a polymer chain for grafting use; 

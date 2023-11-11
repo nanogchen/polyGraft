@@ -33,7 +33,7 @@ class Atomsk:
 		self.crystal_type_ = None
 
 		# print information
-		print(f"Be careful, length unit is in Angstrom!")
+		print(f"Please know that length unit in Atomsk is in Angstrom!")
 		assert os.path.exists("../bin/atomsk"), f"The atomsk program should be placed under /path/to/polyGraft/bin/ to generate atomic lattice crystals"
 
 	def xsf2pdb(self, infname):
@@ -43,6 +43,19 @@ class Atomsk:
 
 		# convert xsf to pdb
 		os.system(f"atomsk {infname} pdb >> gen.log")
+
+		# clean
+		self.clean_files(["gen.log"])
+
+	def xsf2data(self, infname):
+		# check if the file already exists
+		pre = infname.split(".")[0]
+		datafile = pre + ".data"
+		self.clean_files([datafile])
+
+		# convert xsf to pdb
+		os.system(f"atomsk {infname} lammps >> gen.log")
+		os.system(f"mv {pre}.lmp {pre}.data")
 
 		# clean
 		self.clean_files(["gen.log"])
@@ -116,7 +129,14 @@ class Atomsk:
 		os.system(f"atomsk {xsffile} -select out sphere 0.5*box 0.5*box 0.5*box {radius} -rmatom select {outxsffile}  >> gen.log")
 
 		# convert xsf to pdb
-		self.xsf2pdb(outxsffile)
+		outFileFormat = outFile.split(".")[1]
+		if outFileFormat == "pdb":
+			self.xsf2pdb(outxsffile)
+		elif outFileFormat == "data":
+			self.xsf2data(outxsffile)
+		else:
+			print(f"Unknown out file format (outFileFormat) found! Can only be pdb or lammps-data...")
+			sys.exit(0)
 
 		# clean outFiles
 		self.clean_files([xsffile, outxsffile, "gen.log"])
