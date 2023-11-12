@@ -9,11 +9,12 @@
 
 Installation steps (tested with Anaconda):
 1. install [Anaconda](https://anaconda.org/)
-2. create a new environment (see [here](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands)) adding MDAnalysis, numba etc (conda install), using the following
-3. command under the default env (base):
+2. create a new environment (see [here](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands)) adding MDAnalysis, numba etc (conda install), using the following command under the default env (base):
 > conda env create -f environment.yml
-3. download atomsk and place under /path/to/polyGraft/bin
-4. use polyGraft for generation under /path/to/polyGraft/examples
+3. download polyGraft by:
+> git clone -b jcc https://github.com/nanogchen/polyGraft.git polyGraft
+4. download atomsk and place under /path/to/polyGraft/bin
+5. use polyGraft for generation under /path/to/polyGraft/examples
 
 **NOTE**: to use other polymers (rather than PEO) for polymer brush generation using polyGraft, one must provide the gro/itp files of the polymer. The user should be responsible for the results in this case as no validity checks on the input files were applied (i.e., validate the force field parameters and visualize the generated structure etc.)
 
