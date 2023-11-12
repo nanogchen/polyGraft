@@ -550,7 +550,8 @@ class polyGraft():
 		unique_atypes = list(set(atomtypes))
 		unique_atypes.sort()
 
-		unique_btypes = utils.getUniqueBondTypes(self.graftStruct_)
+		# consider graft-subs bond + 1
+		unique_btypes = utils.getUniqueBondTypes(self.graftStruct_) + 1
 		unique_btypes.sort()
 		# print(unique_btypes)
 
