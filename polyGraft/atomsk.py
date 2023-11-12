@@ -23,7 +23,7 @@ class Atomsk:
 
 	def __init__(self, lattice_type, lattice_const, element):
 		assert lattice_type in ['fcc', 'bcc'], f"Currently only fcc/bcc lattice type is supported, but {lattice_type} was given!"
-		assert lattice_const > 1, f"lattice_const should be unit in Angstrom!"
+		assert lattice_const > 1, f"lattice_const should be unit in Angstrom for real unit!"
 
 		self.lattice_type_ = lattice_type
 		self.lattice_const_ = lattice_const
@@ -85,7 +85,7 @@ class Atomsk:
 			os.remove(fname)
 
 		# use atomsk
-		os.system(f"atomsk --create {self.lattice_type_} {self.lattice_const_*10} {self.element_} {fname} ")
+		os.system(f"atomsk --create {self.lattice_type_} {self.lattice_const_} {self.element_} {fname} ")
 			
 	def gen_slab(self, length=50.0, width=50.0, depth=10.0, outFile="slab.pdb"):
 		# get the number of duplicates in each direction

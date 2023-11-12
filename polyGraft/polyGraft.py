@@ -581,7 +581,7 @@ class polyGraft():
 			# add header
 			FO.write("lammps data file written by polyGraft \n")
 			FO.write(f"\n")			
-			FO.write(f"{self.graftStruct_.atoms.n_atoms} atoms\n")
+			FO.write(f"{self.Natoms_} atoms\n")
 			FO.write(f"{len(self.center_.crystal_.bonds)+self.Ngrafts_+self.Ngrafts_*len(self.graft_.polyGRO_.bonds)} bonds\n")
 			FO.write(f"{len(self.graftStruct_.atoms.angles)} angles\n")
 			FO.write(f"{len(self.graftStruct_.atoms.dihedrals)} dihedrals\n")
@@ -610,23 +610,20 @@ class polyGraft():
 			FO.write(f"\n")
 
 			# write polymer first
-			polyGraft_pos = self.graftStruct_.atoms.positions
 			atomtypes_vec = self.graft_.polyGRO_.atoms.types
 			indexed_atomtypes_vec = [atomtype2index[i] for i in atomtypes_vec]
 			for ichain in range(self.Ngrafts_):
 				for atom_idx in range(self.graft_.polyGRO_.atoms.n_atoms):
-					g_idx = ichain*self.graft_.polyGRO_.atoms.n_atoms + atom_idx					
-					atomid = g_idx + 1
+					g_idx = ichain*self.graft_.polyGRO_.atoms.n_atoms + atom_idx
 
-					FO.write(f"{atomid} {ichain+1} {indexed_atomtypes_vec[atom_idx]} {self.graft_.polyGRO_.atoms.charges[atom_idx]:.3f} {polyGraft_pos[g_idx,0]:.3f} {polyGraft_pos[g_idx,1]:.3f} {polyGraft_pos[g_idx,2]:.3f}\n")
+					FO.write(f"{g_idx+1} {ichain+1} {indexed_atomtypes_vec[atom_idx]} {self.graft_.polyGRO_.atoms.charges[atom_idx]:.3f} {self.grafts_all_pos_[g_idx,0]:.3f} {self.grafts_all_pos_[g_idx,1]:.3f} {self.grafts_all_pos_[g_idx,2]:.3f}\n")
 
 			# write lattice 
 			ichain+=1
 			for idx in range(self.center_.crystal_.atoms.n_atoms):
 				g_idx = self.Ngrafts_*self.graft_.polyGRO_.atoms.n_atoms + idx
-				atomid = g_idx + 1
 
-				FO.write(f"{atomid} {ichain+1} {atomtype2index[self.center_.crystal_.atoms[0].type]} {self.graft_.polyGRO_.atoms.charges[atom_idx]:.3f} {polyGraft_pos[g_idx,0]:.3f} {polyGraft_pos[g_idx,1]:.3f} {polyGraft_pos[g_idx,2]:.3f}\n")
+				FO.write(f"{g_idx+1} {ichain+1} {atomtype2index[self.center_.crystal_.atoms[0].type]} {self.center_.crystal_.atoms.charges[atom_idx]:.3f} {self.center_.crystal_.atoms.positions[idx,0]:.3f} {self.center_.crystal_.atoms.positions[idx,1]:.3f} {self.center_.crystal_.atoms.positions[idx,2]:.3f}\n")
 
 			# Bonds
 			FO.write(f"\n")
