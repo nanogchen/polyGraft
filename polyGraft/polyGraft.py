@@ -229,6 +229,17 @@ class polyGraft():
 			ipos = np.matmul(poly_pos, RotMat) + np.tile(TransMat, (self.graft_.polyGRO_.atoms.n_atoms,1)) + np.tile(gld_gft_pts[ichain,:], ((self.graft_.polyGRO_.atoms.n_atoms,1)))
 			self.grafts_all_pos_[ichain*self.graft_.polyGRO_.atoms.n_atoms:(1+ichain)*self.graft_.polyGRO_.atoms.n_atoms, :] = ipos
 
+			i_gft = self.graft_.polyGRO_.copy()
+			i_gft.load_new(ipos, order='fac')
+
+			self.graftStruct_ = mda.Merge(self.graftStruct_.atoms, i_gft.atoms)
+
+			if ichain == 0:
+				self.graftAtmGrp_ = i_gft.copy()
+
+			else:
+				self.graftAtmGrp_ = mda.Merge(self.graftAtmGrp_.atoms, i_gft.atoms)
+
 	def particleGraft(self):
 		# graft on the outer surface of the particle
 
@@ -349,6 +360,17 @@ class polyGraft():
 			ipos = np.matmul(poly_pos, RotMat) + np.tile(TransMat, (self.graft_.polyGRO_.atoms.n_atoms,1)) + np.tile(gld_gft_pts[ichain,:], ((self.graft_.polyGRO_.atoms.n_atoms,1)))
 			self.grafts_all_pos_[ichain*self.graft_.polyGRO_.atoms.n_atoms:(1+ichain)*self.graft_.polyGRO_.atoms.n_atoms, :] = ipos
 
+			i_gft = self.graft_.polyGRO_.copy()
+			i_gft.load_new(ipos, order='fac')
+
+			self.graftStruct_ = mda.Merge(self.graftStruct_.atoms, i_gft.atoms)
+
+			if ichain == 0:
+				self.graftAtmGrp_ = i_gft.copy()
+
+			else:
+				self.graftAtmGrp_ = mda.Merge(self.graftAtmGrp_.atoms, i_gft.atoms)
+
 	def rodGraft(self):
 		# graft on the outer surface of the rod
 
@@ -405,6 +427,17 @@ class polyGraft():
 			ipos = np.matmul(poly_pos, RotMat) + np.tile(TransMat, (self.graft_.polyGRO_.atoms.n_atoms,1)) + np.tile(gld_gft_pts[ichain,:], ((self.graft_.polyGRO_.atoms.n_atoms,1)))
 			self.grafts_all_pos_[ichain*self.graft_.polyGRO_.atoms.n_atoms:(1+ichain)*self.graft_.polyGRO_.atoms.n_atoms, :] = ipos
 
+			i_gft = self.graft_.polyGRO_.copy()
+			i_gft.load_new(ipos, order='fac')
+
+			self.graftStruct_ = mda.Merge(self.graftStruct_.atoms, i_gft.atoms)
+
+			if ichain == 0:
+				self.graftAtmGrp_ = i_gft.copy()
+
+			else:
+				self.graftAtmGrp_ = mda.Merge(self.graftAtmGrp_.atoms, i_gft.atoms)
+				
 	def toGRO(self, fname):
 
 		""" save the assembled system in a gro file"""
@@ -550,33 +583,64 @@ class polyGraft():
 		unique_atypes = list(set(atomtypes))
 		unique_atypes.sort()
 
-		# consider graft-subs bond + 1
-		unique_btypes = utils.getUniqueBondTypes(self.graftStruct_) + 1
+		# consider graft-subs cross bond + 1
+		unique_btypes = utils.getUniqueBondTypes(self.graftStruct_)
 		unique_btypes.sort()
 		# print(unique_btypes)
+
+		# angles: no cross
+		unique_angtypes = utils.getUniqueAngleTypes(self.graftStruct_)
+		unique_angtypes.sort()
+
+		# dihedrals: no cross
+		unique_dtypes = utils.getUniqueDihedralTypes(self.graftStruct_)
+		unique_dtypes.sort()
+
+		# impropers: no cross
+		unique_itypes = utils.getUniqueImproperTypes(self.graftStruct_)
+		unique_itypes.sort()
 
 		# define the atom types by idx
 		atomtype2index = {k:v+1 for v,k in enumerate(unique_atypes)}
 
 		# define the bond types by idx
 		bondtype2index = {k:v+1 for v,k in enumerate(unique_btypes)}
-		print(bondtype2index)
+		angletype2index = {k:v+1 for v,k in enumerate(unique_angtypes)}
+		dihedraltype2index = {k:v+1 for v,k in enumerate(unique_dtypes)}
+		impropertype2index = {k:v+1 for v,k in enumerate(unique_itypes)}
 
 		# # change the type
 		# for itype in type_dict.keys():
 		# 	Natoms_i = self.graftStruct_.select_atoms(f"type {itype}").n_atoms
 		# 	self.graftStruct_.select_atoms(f"type {itype}").types = [str(type_dict[itype]) for _ in range(Natoms_i)]
 
-		# # write the dictionary
-		# with open("polyGraft.prm", 'w') as fo:  
-		# 	for key, value in type_dict.items():  
-		# 		fo.write('%s:%s\n' % (key, value))
+		# write the dictionary
+		with open("polyGraft.prm", 'w') as fo:
+			fo.write(f"# atoms\n")
+			for key, value in atomtype2index.items():
+				fo.write(f"{key}:{value}\n")
 
-		# # write data file using mda
-		# with mda.Writer(fname) as FO:
-		# 	FO.write(self.graftStruct_.atoms)
+			fo.write(f"\n")
+			fo.write(f"# bonds\n")
+			for key, value in bondtype2index.items():
+				fo.write(f"{key}:{value}\n")
 
-		# in-house
+			fo.write(f"\n")
+			fo.write(f"# angles\n")
+			for key, value in angletype2index.items():
+				fo.write(f"{key}:{value}\n")
+
+			fo.write(f"\n")
+			fo.write(f"# dihedrals\n")
+			for key, value in dihedraltype2index.items():
+				fo.write(f"{key}:{value}\n")
+
+			fo.write(f"\n")
+			fo.write(f"# impropers\n")
+			for key, value in impropertype2index.items():
+				fo.write(f"{key}:{value}\n")
+
+		# in-house write data out file
 		with open(fname, 'w') as FO:
 
 			# add header
@@ -589,13 +653,10 @@ class polyGraft():
 			FO.write(f"{len(self.graftStruct_.atoms.impropers)} impropers\n")
 			FO.write(f"\n")
 			FO.write(f"{len(unique_atypes)} atom types\n") 
-			FO.write(f"{len(unique_btypes)} bond types\n")
-			# if Nangletypes_per_chain != 0:
-			# 	FO.write(f"{Nangletypes_per_chain} angle types\n")
-			# if Ndihedraltypes_per_chain != 0:
-			# 	FO.write(f"{Ndihedraltypes_per_chain} dihedral types\n")
-			# if Nimpropertypes_per_chain != 0:
-			# 	FO.write(f"{Nimpropertypes_per_chain} improper types\n")
+			FO.write(f"{len(unique_btypes)+1} bond types\n")
+			FO.write(f"{len(unique_angtypes)} angle types\n")
+			FO.write(f"{len(unique_dtypes)} dihedral types\n")
+			FO.write(f"{len(unique_itypes)} improper types\n")
 
 			pos = self.graftStruct_.atoms.positions
 			box_max,box_min = np.amax(pos, axis=0), np.amin(pos, axis=0)
@@ -603,7 +664,6 @@ class polyGraft():
 			FO.write(f"{box_min[0]-3:.3f} {box_max[0]+3:.3f} xlo xhi\n")
 			FO.write(f"{box_min[1]-3:.3f} {box_max[1]+3:.3f} ylo yhi\n")
 			FO.write(f"{box_min[2]-3:.3f} {box_max[2]+3:.3f} zlo zhi\n")
-			FO.write(f"\n")
 
 			# Atoms
 			FO.write(f"\n")
@@ -650,6 +710,41 @@ class polyGraft():
 				nbonds += 1
 				poly_idx = 1+ipoly*self.graft_.polyITP_.atoms.n_atoms
 				FO.write(f"{nbonds} {len(bondtype2index.keys())+1} {poly_idx} {self.centerGftedIdx_[ipoly]+self.graft_.polyITP_.atoms.n_atoms*self.Ngrafts_}\n")
+
+			# angles
+			FO.write(f"\n")
+			FO.write(f"Angles\n")
+			FO.write(f"\n")
+			nangles = 0
+			for ichain in range(self.Ngrafts_):
+				angle_shift = ichain*self.graft_.polyITP_.atoms.n_atoms
+					
+				for jangle in self.graft_.polyITP_.angles:
+					nangles += 1
+					FO.write(f"{nangles} {jangle.type} {jangle._ix[0]+1+angle_shift} {jangle._ix[1]+1+angle_shift} {jangle._ix[2]+1+angle_shift}\n")	
+
+			# dihedrals
+			FO.write(f"\n")
+			FO.write(f"Dihedrals\n")
+			FO.write(f"\n")
+			ndihedrals = 0
+			for ichain in range(self.Ngrafts_):
+				dihedral_shift = ichain*self.graft_.polyITP_.atoms.n_atoms
+
+				for jdihedral in self.graft_.polyITP_.dihedrals:
+					ndihedrals += 1
+					FO.write(f"{ndihedrals} {jdihedral.type} {jdihedral._ix[0]+1+dihedral_shift} {jdihedral._ix[1]+1+dihedral_shift} {jdihedral._ix[2]+1+dihedral_shift} {jdihedral._ix[3]+1+dihedral_shift}\n")
+			
+			# impropers
+			FO.write(f"\n")
+			FO.write(f"Impropers\n")
+			FO.write(f"\n")
+			nimpropers = 0
+			for ichain in range(self.Ngrafts_):
+				improper_shift = ichain*self.graft_.polyITP_.atoms.n_atoms	
+				for jimproper in self.graft_.polyITP_.impropers:
+					nimpropers += 1
+					FO.write(f"{nimpropers} {jimproper.type} {jimproper._ix[0]+1+improper_shift} {jimproper._ix[1]+1+improper_shift} {jimproper._ix[2]+1+improper_shift} {jimproper._ix[3]+1+improper_shift}\n")
 
 	def toPDB(self, fname):
 

@@ -101,7 +101,14 @@ class Atomsk:
 		os.system(f"atomsk --create {self.lattice_type_} {self.lattice_const_} {self.element_} -duplicate {Nx} {Ny} {Nz} {xsffile} >> gen.log")
 
 		# convert xsf to pdb
-		self.xsf2pdb(xsffile)
+		outFileFormat = outFile.split(".")[1]
+		if outFileFormat == "pdb":
+			self.xsf2pdb(xsffile)
+		elif outFileFormat == "data":
+			self.xsf2data(xsffile)
+		else:
+			print(f"Unknown out file format (outFileFormat) found! Can only be pdb or lammps-data...")
+			sys.exit(0)
 
 		# clean outFiles
 		self.clean_files([xsffile, "gen.log"])
@@ -165,7 +172,14 @@ class Atomsk:
 		os.system(f"atomsk {xsffile} -select in cylinder Z 0.49*box 0.49*box {radius} -rmatom select {outxsffile} >> gen.log")
 
 		# convert xsf to pdb
-		self.xsf2pdb(outxsffile)
+		outFileFormat = outFile.split(".")[1]
+		if outFileFormat == "pdb":
+			self.xsf2pdb(outxsffile)
+		elif outFileFormat == "data":
+			self.xsf2data(outxsffile)
+		else:
+			print(f"Unknown out file format (outFileFormat) found! Can only be pdb or lammps-data...")
+			sys.exit(0)
 
 		# clean outFiles
 		self.clean_files([xsffile, outxsffile, "gen.log"])
@@ -194,7 +208,14 @@ class Atomsk:
 		os.system(f"atomsk {xsffile} -select out cylinder Z 0.5*box 0.5*box {radius} -rmatom select {outxsffile} >> gen.log")
 
 		# convert xsf to pdb
-		self.xsf2pdb(outxsffile)
+		outFileFormat = outFile.split(".")[1]
+		if outFileFormat == "pdb":
+			self.xsf2pdb(outxsffile)
+		elif outFileFormat == "data":
+			self.xsf2data(outxsffile)
+		else:
+			print(f"Unknown out file format (outFileFormat) found! Can only be pdb or lammps-data...")
+			sys.exit(0)
 
 		# clean outFiles
 		self.clean_files([xsffile, outxsffile, "gen.log"])

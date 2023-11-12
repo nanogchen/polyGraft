@@ -96,3 +96,27 @@ def getUniqueBondTypes(mol):
 		bondtype.append(ibond.type)
 
 	return list(set(bondtype))	
+
+def getUniqueAngleTypes(mol):
+
+	angletype = []
+	for iangle in mol.atoms.angles:
+		angletype.append(iangle.type)
+
+	return list(set(angletype))
+
+def getUniqueDihedralTypes(mol):
+
+	dihedraltype = []
+	for idihedral in mol.atoms.dihedrals:
+		dihedraltype.append(idihedral.type)
+
+	return list(set(dihedraltype))
+
+def getUniqueImproperTypes(mol):
+
+	impropertype = []
+	for iimproper in mol.atoms.impropers:
+		impropertype.append(iimproper.type)
+
+	return list(set(impropertype))

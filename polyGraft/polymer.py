@@ -84,7 +84,8 @@ class Polymer():
 		self.align(self.getOrient(), np.array([1, 0, 0]))
 
 		# set charge
-		self.setCharge(0.0)
+		if "charge" not in atom_style.split():
+			self.setCharge(0.0)
 
 	def setCharge(self, charge=0.0):
 		"""set the atom mass of the crystal"""
