@@ -16,7 +16,7 @@ Installation steps (tested with Anaconda):
 4. download polyGraft through github
 5. use polyGraft for generation under /path/to/polyGraft/examples
 
-**NOTE**: to use other polymers (rather than PEO) for polymer brush generation using polyGraft, one must provide the gro/itp files of the polymer. The user should be responsible for the results in this case as no validity checks on the input files were applied (i.e., validate the force field parameters and visualize the generated structure etc.)
+**NOTE**: to use other polymers (rather than PEO) for polymer brush generation using polyGraft, one must provide the gro/itp files (for Gromacs simulations) or data file (for LAMMPS simulations) of the polymer. The user should be responsible for the results in this case as no validity checks on the input files were applied (i.e., validate the force field parameters and visualize the generated structure etc.)
 
 # How to cite
 1. Chen, Guang. "polyGraft 1.0: A Program for Molecular Structure and Topology Generation of Polymer-Grafted Hybrid Nanostructures". J. Comput. Chem. 2023, 44(28), 2230. https://doi.org/10.1002/jcc.27206
@@ -25,8 +25,8 @@ Installation steps (tested with Anaconda):
 
 # How to use
 Representative examples are given in the [**examples**](https://github.com/nanogchen/polyGraft/tree/main/examples) folder (check it out!) For any nanostructure generation, it takes two steps generally:
-1. generate or import the substrate material (hard or soft), and polymer (gro and itp files);
-2. generate the structure and topology using polyGraft. For poly-g-hard, the files are in gro/itp format, while for poly-g-soft, they are in pdb/rtp format.
+1. generate or import the substrate material (hard or soft), and polymer (gro and itp or data files);
+2. generate the structure and topology using polyGraft. For poly-g-hard, the files are in .gro/.itp or .data format, while for poly-g-soft, they are in pdb/rtp format.
 
 # Documentation and User Guide
 Please refer to the documentation of the code [wiki](https://github.com/nanogchen/polyGraft/wiki)!
