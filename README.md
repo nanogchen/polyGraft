@@ -14,7 +14,8 @@ Installation steps (tested with Anaconda):
 > conda env create -f environment.yml
 3. download atomsk and place under /path/to/polyGraft/bin
 4. download polyGraft through github
-5. use polyGraft for generation under /path/to/polyGraft/examples
+5. use polyGraft for generation under /path/to/polyGraft/examples and the polyGraft env
+> conda activate polyGraft
 
 **NOTE**: to use other polymers (rather than PEO) for polymer brush generation using polyGraft, one must provide the gro/itp files (for Gromacs simulations) or data file (for LAMMPS simulations) of the polymer. The user should be responsible for the results in this case as no validity checks on the input files were applied (i.e., validate the connectivity or topology, and force field parameters used for MD simulation etc.)
 
