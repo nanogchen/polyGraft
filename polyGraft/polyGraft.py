@@ -37,12 +37,12 @@ class polyGraft():
 		self.graftingDensity_ = 0.0
 		self.spacing_ = 0.0
 		self.Ngrafts_ = 0
-		self.graftStruct_ = None
+		self.graftStruct_ = None	# the final hybrid structure
 		self.graftAtoms_ = None 	# substrate atoms optional for grafts
 		self.grafts_all_pos_ = None
 		self.centerGftedIdx_ = None # substrate atoms to be grafted with grafts
 
-		# atom groups
+		# atom groups for poly-g-soft/BBPs
 		self.centerAtmGrp_ = None
 		self.graftAtmGrp_ = None
 
