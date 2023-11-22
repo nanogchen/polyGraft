@@ -37,7 +37,6 @@ class polyGraft():
 		self.graftingDensity_ = 0.0
 		self.spacing_ = 0.0
 		self.Ngrafts_ = 0
-		self.Natoms_ = 0
 		self.graftStruct_ = None
 		self.graftAtoms_ = None 	# substrate atoms optional for grafts
 		self.grafts_all_pos_ = None
@@ -182,9 +181,6 @@ class polyGraft():
 		# initialize the pos
 		self.grafts_all_pos_ = np.zeros((self.Ngrafts_*self.graft_.polyGRO_.atoms.n_atoms,3))
 
-		# total number of atoms in the hybrid system
-		self.Natoms_ = self.graft_.polyGRO_.atoms.n_atoms*self.Ngrafts_ + self.center_.crystal_.atoms.n_atoms
-
 		# graft on the upper side of the slab
 		z = max(self.center_.crystal_.atoms.positions[:,2])
 		graft_pts = []
@@ -254,9 +250,6 @@ class polyGraft():
 		# initialize the pos
 		self.grafts_all_pos_ = np.zeros((self.Ngrafts_*self.graft_.polyGRO_.atoms.n_atoms,3))
 
-		# self.Natoms
-		self.Natoms_ = self.graft_.polyGRO_.atoms.n_atoms*self.Ngrafts_ + self.center_.crystal_.atoms.n_atoms
-
 		# get graft pts
 		center_pt = self.center_.crystal_.atoms.center_of_geometry()
 		
@@ -317,9 +310,6 @@ class polyGraft():
 
 		# initialize the pos
 		self.grafts_all_pos_ = np.zeros((self.Ngrafts_*self.graft_.polyGRO_.atoms.n_atoms,3))
-
-		# self.Natoms
-		self.Natoms_ = self.graft_.polyGRO_.atoms.n_atoms*self.Ngrafts_ + self.center_.crystal_.atoms.n_atoms
 
 		# graft on the inner surface of the pore
 		center_pt = self.center_.crystal_.atoms.center_of_geometry()
@@ -385,9 +375,6 @@ class polyGraft():
 
 		# initialize the pos
 		self.grafts_all_pos_ = np.zeros((self.Ngrafts_*self.graft_.polyGRO_.atoms.n_atoms,3))
-
-		# self.Natoms
-		self.Natoms_ = self.graft_.polyGRO_.atoms.n_atoms*self.Ngrafts_ + self.center_.crystal_.atoms.n_atoms
 
 		# graft on the outer surface of the rod
 		center_pt = self.center_.crystal_.atoms.center_of_geometry()
@@ -456,7 +443,7 @@ class polyGraft():
 			with open(fname, 'w') as FO:
 
 				# total atoms
-				total_atoms = self.Natoms_
+				total_atoms = self.graftStruct_.atoms.n_atoms
 
 				# add header
 				FO.write("Write by polyGraft \n")
@@ -609,11 +596,6 @@ class polyGraft():
 		dihedraltype2index = {k:v+1 for v,k in enumerate(unique_dtypes)}
 		impropertype2index = {k:v+1 for v,k in enumerate(unique_itypes)}
 
-		# # change the type
-		# for itype in type_dict.keys():
-		# 	Natoms_i = self.graftStruct_.select_atoms(f"type {itype}").n_atoms
-		# 	self.graftStruct_.select_atoms(f"type {itype}").types = [str(type_dict[itype]) for _ in range(Natoms_i)]
-
 		# write the dictionary
 		with open("polyGraft.prm", 'w') as fo:
 			fo.write(f"# atoms\n")
@@ -646,7 +628,7 @@ class polyGraft():
 			# add header
 			FO.write("lammps data file written by polyGraft \n")
 			FO.write(f"\n")			
-			FO.write(f"{self.Natoms_} atoms\n")
+			FO.write(f"{self.graftStruct_.atoms.n_atoms} atoms\n")
 			FO.write(f"{len(self.center_.crystal_.bonds)+self.Ngrafts_+self.Ngrafts_*len(self.graft_.polyGRO_.bonds)} bonds\n")
 			FO.write(f"{len(self.graftStruct_.atoms.angles)} angles\n")
 			FO.write(f"{len(self.graftStruct_.atoms.dihedrals)} dihedrals\n")
