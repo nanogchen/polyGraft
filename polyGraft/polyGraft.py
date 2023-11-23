@@ -230,7 +230,8 @@ class polyGraft():
 
 		elif self.bigraft_mode_ == "random-bigraft":
 			random_idx = random.choices([i for i in range(self.Ngrafts_)], k=int(self.Ngrafts_/2))
-			self.graft_chain_idx_[random_idx] = 1
+			for i in random_idx:
+				self.graft_chain_idx_[i] = 1
 
 		elif self.bigraft_mode_ == "janus-bigraft":
 			for igft in range(self.Ngrafts_):
