@@ -561,50 +561,81 @@ class polyGraft():
 				# bonds info
 				FO.write("\n")
 				FO.write("[ bonds ]\n")
-				for i in range(self.Ngrafts_):
-					bond_shift = i*self.graft_.polyITP_.atoms.n_atoms
+				bond_shift = 0
+				for graft_chain in self.graft_chain_idx_:
+					if graft_chain == 0:
+						igraft = self.graft_
+					else:
+						igraft = self.graft_bi_
 
-					for jbond in self.graft_.polyITP_.bonds:
+					for jbond in igraft.polyITP_.bonds:
 						FO.write(f"{jbond._ix[0]+1+bond_shift} {jbond._ix[1]+1+bond_shift} {jbond.type}\n")
+
+					bond_shift += igraft.polyITP_.atoms.n_atoms
 					
 				FO.write(";sub-sub\n")
-				bond_shift += self.graft_.polyITP_.atoms.n_atoms
 				for kbond in self.center_.crystal_.bonds:
 					# FO.write(f"{kbond._ix[0]+1+bond_shift} {kbond._ix[1]+1+bond_shift} {kbond.type}\n")
 					FO.write(f"{kbond._ix[0]+1+bond_shift} {kbond._ix[1]+1+bond_shift} {1}\n")
 
 				FO.write(";sub-graft\n")
-				for ipoly in range(self.Ngrafts_):
-					poly_idx = 1+ipoly*self.graft_.polyITP_.atoms.n_atoms
-					FO.write(f"{poly_idx} {self.centerGftedIdx_[ipoly]+self.graft_.polyITP_.atoms.n_atoms*self.Ngrafts_} {1}\n")
+				atom_shift = 0
+				for idx, graft_chain in enumerate(self.graft_chain_idx_):
+					if graft_chain == 0:
+						igraft = self.graft_
+					else:
+						igraft = self.graft_bi_
 
-				# angles info
+					poly_idx = 1+atom_shift
+					FO.write(f"{poly_idx} {self.centerGftedIdx_[idx]+NgraftsAtoms} {1}\n")
+
+					atom_shift += igraft.polyITP_.atoms.n_atoms
+
+				# angles info: for now only consider polymer
 				FO.write("\n")
 				FO.write("[ angles ]\n")
-				for i in range(self.Ngrafts_):
-					angle_shift = i*self.graft_.polyITP_.atoms.n_atoms
-					
-					for jangle in self.graft_.polyITP_.angles:					
+				angle_shift = 0
+				for graft_chain in self.graft_chain_idx_:
+					if graft_chain == 0:
+						igraft = self.graft_
+					else:
+						igraft = self.graft_bi_
+
+					for jangle in igraft.polyITP_.angles:					
 						FO.write(f"{jangle._ix[0]+1+angle_shift} {jangle._ix[1]+1+angle_shift} {jangle._ix[2]+1+angle_shift} {jangle.type}\n")	
+
+					angle_shift += igraft.polyITP_.atoms.n_atoms
 
 				# dihedrals info
 				FO.write("\n")
 				FO.write("[ dihedrals ]\n")
-				for i in range(self.Ngrafts_):
-					dihedral_shift = i*self.graft_.polyITP_.atoms.n_atoms
+				dihedral_shift = 0
+				for graft_chain in self.graft_chain_idx_:
+					if graft_chain == 0:
+						igraft = self.graft_
+					else:
+						igraft = self.graft_bi_	
 
-					for jdihedral in self.graft_.polyITP_.dihedrals:
+					for jdihedral in igraft.polyITP_.dihedrals:
 						FO.write(f"{jdihedral._ix[0]+1+dihedral_shift} {jdihedral._ix[1]+1+dihedral_shift} {jdihedral._ix[2]+1+dihedral_shift} {jdihedral._ix[3]+1+dihedral_shift} {jdihedral.type}\n")
-				
+					
+					dihedral_shift += igraft.polyITP_.atoms.n_atoms
+
 				# pairs info
 				FO.write("\n")
 				FO.write("[ pairs ]\n")
 				FO.write(";from 1-4 pair\n")
-				for i in range(self.Ngrafts_):
-					dihedral_shift = i*self.graft_.polyITP_.atoms.n_atoms
+				dihedral_shift = 0
+				for graft_chain in self.graft_chain_idx_:
+					if graft_chain == 0:
+						igraft = self.graft_
+					else:
+						igraft = self.graft_bi_
 
 					for jdihedral in self.graft_.polyITP_.dihedrals:
 						FO.write(f"{jdihedral._ix[0]+1+dihedral_shift} {jdihedral._ix[3]+1+dihedral_shift} {1}\n")
+
+					dihedral_shift += igraft.polyITP_.atoms.n_atoms
 
 	def toDATA(self, fname):
 		# write result to lammps data file
