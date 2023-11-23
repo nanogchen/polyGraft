@@ -730,16 +730,20 @@ class polyGraft():
 			# write polymer first
 			atomtypes_vec = self.graft_.polyGRO_.atoms.types
 			indexed_atomtypes_vec = [atomtype2index[i] for i in atomtypes_vec]
-			for ichain in range(self.Ngrafts_):
-				for atom_idx in range(self.graft_.polyGRO_.atoms.n_atoms):
-					g_idx = ichain*self.graft_.polyGRO_.atoms.n_atoms + atom_idx
+			NgraftsAtoms = 0
+			for ichain, igraft in enumerate(self.all_grafts_lst_):
+				ipos = igraft.atoms.positions
+				for atom_idx in range(igraft.atoms.n_atoms):
+					g_idx = NgraftsAtoms + atom_idx
 
-					FO.write(f"{g_idx+1} {ichain+1} {indexed_atomtypes_vec[atom_idx]} {self.graft_.polyGRO_.atoms.charges[atom_idx]:.3f} {self.grafts_all_pos_[g_idx,0]:.3f} {self.grafts_all_pos_[g_idx,1]:.3f} {self.grafts_all_pos_[g_idx,2]:.3f}\n")
+					FO.write(f"{g_idx+1} {ichain+1} {indexed_atomtypes_vec[atom_idx]} {igraft.atoms.charges[atom_idx]:.3f} {ipos[atom_idx,0]:.3f} {ipos[atom_idx,1]:.3f} {ipos[atom_idx,2]:.3f}\n")
+				
+				NgraftsAtoms += igraft.atoms.n_atoms
 
 			# write lattice 
 			ichain+=1
 			for idx in range(self.center_.crystal_.atoms.n_atoms):
-				g_idx = self.Ngrafts_*self.graft_.polyGRO_.atoms.n_atoms + idx
+				g_idx = NgraftsAtoms + idx
 
 				FO.write(f"{g_idx+1} {ichain+1} {atomtype2index[self.center_.crystal_.atoms[0].type]} {self.center_.crystal_.atoms.charges[atom_idx]:.3f} {self.center_.crystal_.atoms.positions[idx,0]:.3f} {self.center_.crystal_.atoms.positions[idx,1]:.3f} {self.center_.crystal_.atoms.positions[idx,2]:.3f}\n")
 
@@ -749,59 +753,90 @@ class polyGraft():
 			FO.write(f"\n")
 			# polymer first
 			nbonds = 0
-			for ichain in range(self.Ngrafts_):
-				bond_shift = ichain*self.graft_.polyITP_.atoms.n_atoms
+			bond_shift = 0
+			for graft_chain in self.graft_chain_idx_:
+				if graft_chain == 0:
+					igraft = self.graft_
+				else:
+					igraft = self.graft_bi_
 
-				for ibond in self.graft_.polyITP_.bonds:
+				for ibond in igraft.polyITP_.bonds:
 					nbonds += 1
 					FO.write(f"{nbonds} {ibond.type} {ibond._ix[0]+1+bond_shift} {ibond._ix[1]+1+bond_shift}\n")
+				
+				bond_shift += igraft.polyITP_.atoms.n_atoms
 
 			# lattice
-			bond_shift += self.graft_.polyITP_.atoms.n_atoms
 			for jbond in self.center_.crystal_.bonds:
 				nbonds += 1
 				FO.write(f"{nbonds} {bondtype2index[jbond.type]} {jbond._ix[0]+1+bond_shift} {jbond._ix[1]+1+bond_shift}\n")
 
 			# polymer-lattice
-			for ipoly in range(self.Ngrafts_):
+			atom_shift = 0
+			for idx, graft_chain in enumerate(self.graft_chain_idx_):
+				if graft_chain == 0:
+					igraft = self.graft_
+				else:
+					igraft = self.graft_bi_
+
+				poly_idx = 1+atom_shift			
 				nbonds += 1
-				poly_idx = 1+ipoly*self.graft_.polyITP_.atoms.n_atoms
-				FO.write(f"{nbonds} {len(bondtype2index.keys())+1} {poly_idx} {self.centerGftedIdx_[ipoly]+self.graft_.polyITP_.atoms.n_atoms*self.Ngrafts_}\n")
+				FO.write(f"{nbonds} {len(bondtype2index.keys())+1} {poly_idx} {self.centerGftedIdx_[idx]+NgraftsAtoms}\n")
+				atom_shift += igraft.polyITP_.atoms.n_atoms
 
 			# angles
 			FO.write(f"\n")
 			FO.write(f"Angles\n")
 			FO.write(f"\n")
 			nangles = 0
-			for ichain in range(self.Ngrafts_):
-				angle_shift = ichain*self.graft_.polyITP_.atoms.n_atoms
-					
-				for jangle in self.graft_.polyITP_.angles:
+			angle_shift = 0
+			for graft_chain in self.graft_chain_idx_:
+				if graft_chain == 0:
+					igraft = self.graft_
+				else:
+					igraft = self.graft_bi_
+	
+				for jangle in igraft.polyITP_.angles:
 					nangles += 1
 					FO.write(f"{nangles} {jangle.type} {jangle._ix[0]+1+angle_shift} {jangle._ix[1]+1+angle_shift} {jangle._ix[2]+1+angle_shift}\n")	
+
+				angle_shift += igraft.polyITP_.atoms.n_atoms
 
 			# dihedrals
 			FO.write(f"\n")
 			FO.write(f"Dihedrals\n")
 			FO.write(f"\n")
 			ndihedrals = 0
-			for ichain in range(self.Ngrafts_):
-				dihedral_shift = ichain*self.graft_.polyITP_.atoms.n_atoms
+			dihedral_shift = 0
+			for graft_chain in self.graft_chain_idx_:
+				if graft_chain == 0:
+					igraft = self.graft_
+				else:
+					igraft = self.graft_bi_	
 
-				for jdihedral in self.graft_.polyITP_.dihedrals:
+				for jdihedral in igraft.polyITP_.dihedrals:
 					ndihedrals += 1
 					FO.write(f"{ndihedrals} {jdihedral.type} {jdihedral._ix[0]+1+dihedral_shift} {jdihedral._ix[1]+1+dihedral_shift} {jdihedral._ix[2]+1+dihedral_shift} {jdihedral._ix[3]+1+dihedral_shift}\n")
-			
+				
+				dihedral_shift += igraft.polyITP_.atoms.n_atoms
+
 			# impropers
 			FO.write(f"\n")
 			FO.write(f"Impropers\n")
 			FO.write(f"\n")
 			nimpropers = 0
-			for ichain in range(self.Ngrafts_):
-				improper_shift = ichain*self.graft_.polyITP_.atoms.n_atoms	
-				for jimproper in self.graft_.polyITP_.impropers:
+			improper_shift = 0
+			for graft_chain in self.graft_chain_idx_:
+				if graft_chain == 0:
+					igraft = self.graft_
+				else:
+					igraft = self.graft_bi_
+	
+				for jimproper in igraft.polyITP_.impropers:
 					nimpropers += 1
 					FO.write(f"{nimpropers} {jimproper.type} {jimproper._ix[0]+1+improper_shift} {jimproper._ix[1]+1+improper_shift} {jimproper._ix[2]+1+improper_shift} {jimproper._ix[3]+1+improper_shift}\n")
+
+				improper_shift += igraft.polyITP_.atoms.n_atoms
 
 	def toPDB(self, fname):
 
