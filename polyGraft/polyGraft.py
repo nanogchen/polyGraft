@@ -39,12 +39,26 @@ class polyGraft():
 		self.Ngrafts_ = 0
 		self.graftStruct_ = None	# the final hybrid structure
 		self.graftAtoms_ = None 	# substrate atoms optional for grafts
-		self.grafts_all_pos_ = None
+
+		self.all_grafts_lst_ = None # list of all grafts (atom group)
+		self.graft_chain_idx_ = None# list of chain idx for each graft point
 		self.centerGftedIdx_ = None # substrate atoms to be grafted with grafts
 
 		# atom groups for poly-g-soft/BBPs
 		self.centerAtmGrp_ = None
 		self.graftAtmGrp_ = None
+
+		# for bigrafts
+		self.bigraft_mode_  = None
+
+	def setBinaryGraft(self, graft_bi):
+		# read in the second graft for binary grafts
+		self.graft_bi_ = graft_bi
+		
+	def setBinaryGraftStyle(self, style):
+		# set the grafting style for binary grafts
+		self.bigraft_mode_ = style
+		assert style in ['homo-bigraft','random-bigraft','janus-bigraft'], f"Currently only homo/random/janus type is allowed!"
 
 	def setGraftingDensity(self, graftingDensity):
 		if isinstance(self.center_, Crystal):
@@ -179,7 +193,7 @@ class polyGraft():
 		self.Ngrafts_ = Nchainsx*Nchainsy
 
 		# initialize the pos
-		self.grafts_all_pos_ = np.zeros((self.Ngrafts_*self.graft_.polyGRO_.atoms.n_atoms,3))
+		self.all_grafts_lst_ = []
 
 		# graft on the upper side of the slab
 		z = max(self.center_.crystal_.atoms.positions[:,2])
@@ -207,10 +221,21 @@ class polyGraft():
 		gld_gft_pts, idx = getNN_two(graft_pts, self.graftAtoms_.positions)
 		self.centerGftedIdx_ = idx
 
-		# determine normal and set
-		poly_pos = self.graft_.polyGRO_.atoms.positions
-		# ref_vect = self.graft_.getOrient()
-		ref_vect = self.graft_.getEndVect()
+		# obtain idx [0 for 1st graft; 1 for 2nd graft]
+		self.graft_chain_idx_ = [0 for _ in range(self.Ngrafts_)]
+		if self.bigraft_mode_ == "homo-bigraft":
+			for igft in range(self.Ngrafts_):
+				if igft % 2 != 0:
+					self.graft_chain_idx_[igft] = 1
+
+		elif self.bigraft_mode_ == "random-bigraft":
+			random_idx = random.choices([i for i in range(self.Ngrafts_)], k=int(self.Ngrafts_/2))
+			self.graft_chain_idx_[random_idx] = 1
+
+		elif self.bigraft_mode_ == "janus-bigraft":
+			for igft in range(self.Ngrafts_):
+				if gld_gft_pts[igft, 0] > 0.5*length :
+					self.graft_chain_idx_[igft] = 1
 
 		# get the pos of all chains
 		for ichain in range(self.Ngrafts_):
@@ -219,22 +244,31 @@ class polyGraft():
 			# get the normal vector
 			norm_vector = np.array([0.0,0.0,1.0])
 
+			# select graft based on the selection (determine normal and set)
+			if self.graft_chain_idx_[ichain] == 0:
+				poly_pos = self.graft_.polyGRO_.atoms.positions
+				ref_vect = self.graft_.getEndVect()
+				i_graft = self.graft_.polyGRO_.copy()
+
+			else:
+				poly_pos = self.graft_bi_.polyGRO_.atoms.positions
+				ref_vect = self.graft_bi_.getEndVect()
+				i_graft = self.graft_bi_.polyGRO_.copy()
+
 			RotMat,TransMat = getTransformationMat(ref_vect, norm_vector)
 			RotMat = np.transpose(RotMat)
 
-			ipos = np.matmul(poly_pos, RotMat) + np.tile(TransMat, (self.graft_.polyGRO_.atoms.n_atoms,1)) + np.tile(gld_gft_pts[ichain,:], ((self.graft_.polyGRO_.atoms.n_atoms,1)))
-			self.grafts_all_pos_[ichain*self.graft_.polyGRO_.atoms.n_atoms:(1+ichain)*self.graft_.polyGRO_.atoms.n_atoms, :] = ipos
+			ipos = np.matmul(poly_pos, RotMat) + np.tile(TransMat, (i_graft.atoms.n_atoms,1)) + np.tile(gld_gft_pts[ichain,:], ((i_graft.atoms.n_atoms,1)))
+			i_graft.load_new(ipos, order='fac')
+			self.all_grafts_lst_.append(i_graft)
 
-			i_gft = self.graft_.polyGRO_.copy()
-			i_gft.load_new(ipos, order='fac')
-
-			self.graftStruct_ = mda.Merge(self.graftStruct_.atoms, i_gft.atoms)
+			self.graftStruct_ = mda.Merge(self.graftStruct_.atoms, i_graft.atoms)
 
 			if ichain == 0:
-				self.graftAtmGrp_ = i_gft.copy()
+				self.graftAtmGrp_ = i_graft.copy()
 
 			else:
-				self.graftAtmGrp_ = mda.Merge(self.graftAtmGrp_.atoms, i_gft.atoms)
+				self.graftAtmGrp_ = mda.Merge(self.graftAtmGrp_.atoms, i_graft.atoms)
 
 	def particleGraft(self):
 		# graft on the outer surface of the particle
@@ -449,25 +483,25 @@ class polyGraft():
 				FO.write("Write by polyGraft \n")
 				FO.write("%5d\n" % (total_atoms))
 
-				# for iatom in self.graftStruct_.atoms:
-				# 	FO.write(f"{iatom.resid:5d}{iatom.resname:5s}{iatom.name:5s}{iatom.id:5d}{iatom.position[0]/10:8.3f}{iatom.position[1]/10:8.3f}{iatom.position[2]/10:8.3f}\n")
-
 				# write polymer first
-				for ichain in range(self.Ngrafts_):
-					for idx in range(self.graft_.polyGRO_.atoms.n_atoms):
-						g_idx = ichain*self.graft_.polyGRO_.atoms.n_atoms + idx
+				NgraftsAtoms = 0
+				for igraft in self.all_grafts_lst_:
+					ipos = igraft.atoms.positions
+					for idx in range(igraft.atoms.n_atoms):
 
-						resid = self.graft_.polyGRO_.atoms.resids[idx]
-						resname = self.graft_.polyGRO_.atoms.resnames[idx]
-						atomname = self.graft_.polyGRO_.atoms.names[idx]
-						atomid = g_idx + 1
+						resid = igraft.atoms.resids[idx]
+						resname = igraft.atoms.resnames[idx]
+						atomname = igraft.atoms.names[idx]
+						atomid = NgraftsAtoms + idx + 1
 
 						FO.write("%5d%5s%5s%5d%8.3f%8.3f%8.3f\n" % (resid, resname, atomname, atomid, \
-									self.grafts_all_pos_[g_idx,0]/10, self.grafts_all_pos_[g_idx,1]/10, self.grafts_all_pos_[g_idx,2]/10))
+									ipos[idx,0]/10, ipos[idx,1]/10, ipos[idx,2]/10))
+
+					NgraftsAtoms += igraft.atoms.n_atoms
 
 				# write lattice 
 				for idx in range(self.center_.crystal_.atoms.n_atoms):
-					g_idx = self.Ngrafts_*self.graft_.polyGRO_.atoms.n_atoms + idx
+					g_idx = NgraftsAtoms + idx
 
 					resid = idx + 1
 					resname = self.center_.crystal_.atoms.resnames[idx]
@@ -500,15 +534,24 @@ class polyGraft():
 				# polymer grafts first, substrate second
 				# atoms info
 				FO.write("[ atoms ]\n")
-				poly_n_atoms = self.graft_.polyITP_.atoms.n_atoms
-				for i in range(self.Ngrafts_):
-					for j in range(poly_n_atoms):
-						atomidx = i*poly_n_atoms+j+1
-						iatom = self.graft_.polyITP_.atoms[j]
+				NgraftsAtoms = 0
+				for graft_chain in self.graft_chain_idx_:
+					if graft_chain == 0:
+						igraft = self.graft_
+					else:
+						igraft = self.graft_bi_
+
+					poly_n_atoms = igraft.polyITP_.atoms.n_atoms
+					for idx in range(poly_n_atoms):
+
+						atomidx = NgraftsAtoms+idx+1
+						iatom = igraft.polyITP_.atoms[idx]
 
 						# atom_idx atom_type resid resname atom_name resid charge mass
 						FO.write(f"{atomidx} {iatom.type} {iatom.resid} {iatom.resname} {iatom.name} {iatom.resid} {iatom.charge:.3f} {iatom.mass}\n")
-				
+					
+					NgraftsAtoms += igraft.polyITP_.atoms.n_atoms
+
 				FO.write(";sub\n")
 				for katom in self.center_.crystal_.atoms:
 					atomidx+=1
