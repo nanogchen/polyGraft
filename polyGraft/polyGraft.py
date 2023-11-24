@@ -283,7 +283,7 @@ class polyGraft():
 		self.Ngrafts_ = round(self.graftingDensity_*surfArea)
 
 		# initialize the pos
-		self.grafts_all_pos_ = np.zeros((self.Ngrafts_*self.graft_.polyGRO_.atoms.n_atoms,3))
+		self.all_grafts_lst_ = []
 
 		# get graft pts
 		center_pt = self.center_.crystal_.atoms.center_of_geometry()
@@ -301,10 +301,22 @@ class polyGraft():
 		gld_gft_pts, idx = getNN_two(graft_pts, self.graftAtoms_.positions)
 		self.centerGftedIdx_ = idx
 
-		# determine normal and set
-		poly_pos = self.graft_.polyGRO_.atoms.positions
-		# ref_vect = self.graft_.getOrient()
-		ref_vect = self.graft_.getEndVect()
+		# obtain idx [0 for 1st graft; 1 for 2nd graft]
+		self.graft_chain_idx_ = [0 for _ in range(self.Ngrafts_)]
+		if self.bigraft_mode_ == "homo-bigraft":
+			for igft in range(self.Ngrafts_):
+				if igft % 2 != 0:
+					self.graft_chain_idx_[igft] = 1
+
+		elif self.bigraft_mode_ == "random-bigraft":
+			random_idx = random.choices([i for i in range(self.Ngrafts_)], k=int(self.Ngrafts_/2))
+			for i in random_idx:
+				self.graft_chain_idx_[i] = 1
+
+		elif self.bigraft_mode_ == "janus-bigraft":
+			for igft in range(self.Ngrafts_):
+				if gld_gft_pts[igft, 2] > center_pt[2]:
+					self.graft_chain_idx_[igft] = 1
 
 		# get the pos of all chains
 		for ichain in range(self.Ngrafts_):
@@ -314,22 +326,31 @@ class polyGraft():
 			norm_vector = i_gft_pt - center_pt
 			norm_vector = norm_vector/np.linalg.norm(norm_vector)
 
+			# select graft based on the selection (determine normal and set)
+			if self.graft_chain_idx_[ichain] == 0:
+				poly_pos = self.graft_.polyGRO_.atoms.positions
+				ref_vect = self.graft_.getEndVect()
+				i_graft = self.graft_.polyGRO_.copy()
+
+			else:
+				poly_pos = self.graft_bi_.polyGRO_.atoms.positions
+				ref_vect = self.graft_bi_.getEndVect()
+				i_graft = self.graft_bi_.polyGRO_.copy()
+
 			RotMat,TransMat = getTransformationMat(ref_vect, norm_vector)
 			RotMat = np.transpose(RotMat)
 
-			ipos = np.matmul(poly_pos, RotMat) + np.tile(TransMat, (self.graft_.polyGRO_.atoms.n_atoms,1)) + np.tile(gld_gft_pts[ichain,:], ((self.graft_.polyGRO_.atoms.n_atoms,1)))
-			self.grafts_all_pos_[ichain*self.graft_.polyGRO_.atoms.n_atoms:(1+ichain)*self.graft_.polyGRO_.atoms.n_atoms, :] = ipos
+			ipos = np.matmul(poly_pos, RotMat) + np.tile(TransMat, (i_graft.atoms.n_atoms,1)) + np.tile(gld_gft_pts[ichain,:], ((i_graft.atoms.n_atoms,1)))
+			i_graft.load_new(ipos, order='fac')
+			self.all_grafts_lst_.append(i_graft)
 
-			i_gft = self.graft_.polyGRO_.copy()
-			i_gft.load_new(ipos, order='fac')
-
-			self.graftStruct_ = mda.Merge(self.graftStruct_.atoms, i_gft.atoms)
+			self.graftStruct_ = mda.Merge(self.graftStruct_.atoms, i_graft.atoms)
 
 			if ichain == 0:
-				self.graftAtmGrp_ = i_gft.copy()
+				self.graftAtmGrp_ = i_graft.copy()
 
 			else:
-				self.graftAtmGrp_ = mda.Merge(self.graftAtmGrp_.atoms, i_gft.atoms)
+				self.graftAtmGrp_ = mda.Merge(self.graftAtmGrp_.atoms, i_graft.atoms)
 
 	def poreGraft(self):
 		# graft on the inner surface of the pore
@@ -344,7 +365,7 @@ class polyGraft():
 		self.Ngrafts_ = Nchainsxy*Nchainsz
 
 		# initialize the pos
-		self.grafts_all_pos_ = np.zeros((self.Ngrafts_*self.graft_.polyGRO_.atoms.n_atoms,3))
+		self.all_grafts_lst_ = []
 
 		# graft on the inner surface of the pore
 		center_pt = self.center_.crystal_.atoms.center_of_geometry()
@@ -364,11 +385,22 @@ class polyGraft():
 		gld_gft_pts, idx = getNN_two(graft_pts, self.graftAtoms_.positions)
 		self.centerGftedIdx_ = idx
 
-		# determine normal and set
-		poly_pos = self.graft_.polyGRO_.atoms.positions
-		# ref_vect = self.graft_.getOrient()
-		# ref_vect = self.graft_.getEndVect()
-		ref_vect = np.array([1.0,0.0,0.0])
+		# obtain idx [0 for 1st graft; 1 for 2nd graft]
+		self.graft_chain_idx_ = [0 for _ in range(self.Ngrafts_)]
+		if self.bigraft_mode_ == "homo-bigraft":
+			for igft in range(self.Ngrafts_):
+				if igft % 2 != 0:
+					self.graft_chain_idx_[igft] = 1
+
+		elif self.bigraft_mode_ == "random-bigraft":
+			random_idx = random.choices([i for i in range(self.Ngrafts_)], k=int(self.Ngrafts_/2))
+			for i in random_idx:
+				self.graft_chain_idx_[i] = 1
+
+		elif self.bigraft_mode_ == "janus-bigraft":
+			for igft in range(self.Ngrafts_):
+				if gld_gft_pts[igft, 2] > 0.5*depth :
+					self.graft_chain_idx_[igft] = 1
 
 		# get the pos of all chains
 		for ichain in range(self.Ngrafts_):
@@ -379,22 +411,32 @@ class polyGraft():
 			norm_vector[2] = 0.0 # zero vertical componet
 			norm_vector = norm_vector/np.linalg.norm(norm_vector)
 
+			# select graft based on the selection (determine normal and set)
+			if self.graft_chain_idx_[ichain] == 0:
+				poly_pos = self.graft_.polyGRO_.atoms.positions
+				ref_vect = self.graft_.getEndVect()
+				# ref_vect = np.array([1.0,0.0,0.0])
+				i_graft = self.graft_.polyGRO_.copy()
+
+			else:
+				poly_pos = self.graft_bi_.polyGRO_.atoms.positions
+				ref_vect = self.graft_bi_.getEndVect()
+				i_graft = self.graft_bi_.polyGRO_.copy()
+
 			RotMat,TransMat = getTransformationMat(ref_vect, norm_vector)
 			RotMat = np.transpose(RotMat)
 
-			ipos = np.matmul(poly_pos, RotMat) + np.tile(TransMat, (self.graft_.polyGRO_.atoms.n_atoms,1)) + np.tile(gld_gft_pts[ichain,:], ((self.graft_.polyGRO_.atoms.n_atoms,1)))
-			self.grafts_all_pos_[ichain*self.graft_.polyGRO_.atoms.n_atoms:(1+ichain)*self.graft_.polyGRO_.atoms.n_atoms, :] = ipos
+			ipos = np.matmul(poly_pos, RotMat) + np.tile(TransMat, (i_graft.atoms.n_atoms,1)) + np.tile(gld_gft_pts[ichain,:], ((i_graft.atoms.n_atoms,1)))
+			i_graft.load_new(ipos, order='fac')
+			self.all_grafts_lst_.append(i_graft)
 
-			i_gft = self.graft_.polyGRO_.copy()
-			i_gft.load_new(ipos, order='fac')
-
-			self.graftStruct_ = mda.Merge(self.graftStruct_.atoms, i_gft.atoms)
+			self.graftStruct_ = mda.Merge(self.graftStruct_.atoms, i_graft.atoms)
 
 			if ichain == 0:
-				self.graftAtmGrp_ = i_gft.copy()
+				self.graftAtmGrp_ = i_graft.copy()
 
 			else:
-				self.graftAtmGrp_ = mda.Merge(self.graftAtmGrp_.atoms, i_gft.atoms)
+				self.graftAtmGrp_ = mda.Merge(self.graftAtmGrp_.atoms, i_graft.atoms)
 
 	def rodGraft(self):
 		# graft on the outer surface of the rod
@@ -409,7 +451,7 @@ class polyGraft():
 		self.Ngrafts_ = Nchainsxy*Nchainsz
 
 		# initialize the pos
-		self.grafts_all_pos_ = np.zeros((self.Ngrafts_*self.graft_.polyGRO_.atoms.n_atoms,3))
+		self.all_grafts_lst_ = []
 
 		# graft on the outer surface of the rod
 		center_pt = self.center_.crystal_.atoms.center_of_geometry()
@@ -429,10 +471,22 @@ class polyGraft():
 		gld_gft_pts, idx = getNN_two(graft_pts, self.graftAtoms_.positions)
 		self.centerGftedIdx_ = idx
 
-		# determine normal and set
-		poly_pos = self.graft_.polyGRO_.atoms.positions
-		# ref_vect = self.graft_.getOrient()
-		ref_vect = self.graft_.getEndVect()
+		# obtain idx [0 for 1st graft; 1 for 2nd graft]
+		self.graft_chain_idx_ = [0 for _ in range(self.Ngrafts_)]
+		if self.bigraft_mode_ == "homo-bigraft":
+			for igft in range(self.Ngrafts_):
+				if igft % 2 != 0:
+					self.graft_chain_idx_[igft] = 1
+
+		elif self.bigraft_mode_ == "random-bigraft":
+			random_idx = random.choices([i for i in range(self.Ngrafts_)], k=int(self.Ngrafts_/2))
+			for i in random_idx:
+				self.graft_chain_idx_[i] = 1
+
+		elif self.bigraft_mode_ == "janus-bigraft":
+			for igft in range(self.Ngrafts_):
+				if gld_gft_pts[igft, 2] > 0.5*depth :
+					self.graft_chain_idx_[igft] = 1
 
 		# get the pos of all chains
 		for ichain in range(self.Ngrafts_):
@@ -443,22 +497,32 @@ class polyGraft():
 			norm_vector[2] = 0.0 # zero vertical componet
 			norm_vector = norm_vector/np.linalg.norm(norm_vector)
 
+			# select graft based on the selection (determine normal and set)
+			if self.graft_chain_idx_[ichain] == 0:
+				poly_pos = self.graft_.polyGRO_.atoms.positions
+				ref_vect = self.graft_.getEndVect()
+				# ref_vect = np.array([1.0,0.0,0.0])
+				i_graft = self.graft_.polyGRO_.copy()
+
+			else:
+				poly_pos = self.graft_bi_.polyGRO_.atoms.positions
+				ref_vect = self.graft_bi_.getEndVect()
+				i_graft = self.graft_bi_.polyGRO_.copy()
+
 			RotMat,TransMat = getTransformationMat(ref_vect, norm_vector)
 			RotMat = np.transpose(RotMat)
 
-			ipos = np.matmul(poly_pos, RotMat) + np.tile(TransMat, (self.graft_.polyGRO_.atoms.n_atoms,1)) + np.tile(gld_gft_pts[ichain,:], ((self.graft_.polyGRO_.atoms.n_atoms,1)))
-			self.grafts_all_pos_[ichain*self.graft_.polyGRO_.atoms.n_atoms:(1+ichain)*self.graft_.polyGRO_.atoms.n_atoms, :] = ipos
+			ipos = np.matmul(poly_pos, RotMat) + np.tile(TransMat, (i_graft.atoms.n_atoms,1)) + np.tile(gld_gft_pts[ichain,:], ((i_graft.atoms.n_atoms,1)))
+			i_graft.load_new(ipos, order='fac')
+			self.all_grafts_lst_.append(i_graft)
 
-			i_gft = self.graft_.polyGRO_.copy()
-			i_gft.load_new(ipos, order='fac')
-
-			self.graftStruct_ = mda.Merge(self.graftStruct_.atoms, i_gft.atoms)
+			self.graftStruct_ = mda.Merge(self.graftStruct_.atoms, i_graft.atoms)
 
 			if ichain == 0:
-				self.graftAtmGrp_ = i_gft.copy()
+				self.graftAtmGrp_ = i_graft.copy()
 
 			else:
-				self.graftAtmGrp_ = mda.Merge(self.graftAtmGrp_.atoms, i_gft.atoms)
+				self.graftAtmGrp_ = mda.Merge(self.graftAtmGrp_.atoms, i_graft.atoms)
 				
 	def toGRO(self, fname):
 
@@ -701,10 +765,17 @@ class polyGraft():
 		with open(fname, 'w') as FO:
 
 			# add header
+			Nbonds_all = len(self.center_.crystal_.bonds)+self.Ngrafts_
+			for ichain in range(self.Ngrafts_):
+				if self.graft_chain_idx_[ichain] == 0:
+					Nbonds_all += len(self.graft_.polyGRO_.bonds)
+				else:
+					Nbonds_all += len(self.graft_bi_.polyGRO_.bonds)
+
 			FO.write("lammps data file written by polyGraft \n")
 			FO.write(f"\n")			
 			FO.write(f"{self.graftStruct_.atoms.n_atoms} atoms\n")
-			FO.write(f"{len(self.center_.crystal_.bonds)+self.Ngrafts_+self.Ngrafts_*len(self.graft_.polyGRO_.bonds)} bonds\n")
+			FO.write(f"{Nbonds_all} bonds\n")
 			FO.write(f"{len(self.graftStruct_.atoms.angles)} angles\n")
 			FO.write(f"{len(self.graftStruct_.atoms.dihedrals)} dihedrals\n")
 			FO.write(f"{len(self.graftStruct_.atoms.impropers)} impropers\n")
