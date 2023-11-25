@@ -41,7 +41,7 @@ class polyGraft():
 		self.graftAtoms_ = None 	# substrate atoms optional for grafts
 
 		self.all_grafts_lst_ = None # list of all grafts (atom group)
-		self.graft_chain_idx_ = None# list of chain idx for each graft point
+		self.graft_chain_idx_ = None# list of chain type for each graft point
 		self.centerGftedIdx_ = None # substrate atoms to be grafted with grafts
 
 		# atom groups for poly-g-soft/BBPs
@@ -192,7 +192,7 @@ class polyGraft():
 		Nchainsy = int(width/self.spacing_)
 		self.Ngrafts_ = Nchainsx*Nchainsy
 
-		# initialize the pos
+		# initialize the list
 		self.all_grafts_lst_ = []
 
 		# graft on the upper side of the slab
@@ -282,7 +282,7 @@ class polyGraft():
 		# calculate Nchains to graft
 		self.Ngrafts_ = round(self.graftingDensity_*surfArea)
 
-		# initialize the pos
+		# initialize the list
 		self.all_grafts_lst_ = []
 
 		# get graft pts
@@ -364,7 +364,7 @@ class polyGraft():
 		Nchainsz = int(depth/self.spacing_)
 		self.Ngrafts_ = Nchainsxy*Nchainsz
 
-		# initialize the pos
+		# initialize the list
 		self.all_grafts_lst_ = []
 
 		# graft on the inner surface of the pore
@@ -450,7 +450,7 @@ class polyGraft():
 		Nchainsz = int(depth/self.spacing_)
 		self.Ngrafts_ = Nchainsxy*Nchainsz
 
-		# initialize the pos
+		# initialize the list
 		self.all_grafts_lst_ = []
 
 		# graft on the outer surface of the rod
@@ -501,7 +501,6 @@ class polyGraft():
 			if self.graft_chain_idx_[ichain] == 0:
 				poly_pos = self.graft_.polyGRO_.atoms.positions
 				ref_vect = self.graft_.getEndVect()
-				# ref_vect = np.array([1.0,0.0,0.0])
 				i_graft = self.graft_.polyGRO_.copy()
 
 			else:
