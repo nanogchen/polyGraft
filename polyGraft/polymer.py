@@ -81,7 +81,10 @@ class Polymer():
 		self.center2graft()
 
 		# align the minimum Rg axis to the x-axis (defaults)
-		self.align(self.getOrient(), np.array([1, 0, 0]))
+		if self.polyname_ != "CG":
+			self.align(self.getOrient(), np.array([1, 0, 0]))
+		else:
+			self.align(np.array([0, 0, 1]), np.array([1, 0, 0]))
 
 		# set charge
 		if "charge" not in atom_style.split():

@@ -62,7 +62,8 @@ class polyGraft():
 
 	def setGraftingDensity(self, graftingDensity):
 		if isinstance(self.center_, Crystal):
-			assert graftingDensity < 0.06, f"Grafting density cannot be too large (smaller than 0.06 A^-2)!"
+			if graftingDensity > 0.06:
+				print(f"WARNING: Grafting density cannot be too large in real units (smaller than 0.06 A^-2)!")
 			self.graftingDensity_ = graftingDensity		
 
 			# spacing 
@@ -700,7 +701,7 @@ class polyGraft():
 
 					dihedral_shift += igraft.polyITP_.atoms.n_atoms
 
-	def toDATA(self, fname):
+	def toDATA(self, fname, with_charges=True):
 		# write result to lammps data file
 
 		# change the atom type in letter to integers
@@ -801,21 +802,39 @@ class polyGraft():
 			atomtypes_vec = self.graft_.polyGRO_.atoms.types
 			indexed_atomtypes_vec = [atomtype2index[i] for i in atomtypes_vec]
 			NgraftsAtoms = 0
-			for ichain, igraft in enumerate(self.all_grafts_lst_):
-				ipos = igraft.atoms.positions
-				for atom_idx in range(igraft.atoms.n_atoms):
-					g_idx = NgraftsAtoms + atom_idx
+			if with_charges:
+				for ichain, igraft in enumerate(self.all_grafts_lst_):
+					ipos = igraft.atoms.positions
+					for atom_idx in range(igraft.atoms.n_atoms):
+						g_idx = NgraftsAtoms + atom_idx
 
-					FO.write(f"{g_idx+1} {ichain+1} {indexed_atomtypes_vec[atom_idx]} {igraft.atoms.charges[atom_idx]:.3f} {ipos[atom_idx,0]:.3f} {ipos[atom_idx,1]:.3f} {ipos[atom_idx,2]:.3f}\n")
-				
-				NgraftsAtoms += igraft.atoms.n_atoms
+						FO.write(f"{g_idx+1} {ichain+1} {indexed_atomtypes_vec[atom_idx]} {igraft.atoms.charges[atom_idx]:.3f} {ipos[atom_idx,0]:.3f} {ipos[atom_idx,1]:.3f} {ipos[atom_idx,2]:.3f}\n")
+					
+					NgraftsAtoms += igraft.atoms.n_atoms
 
-			# write lattice 
-			ichain+=1
-			for idx in range(self.center_.crystal_.atoms.n_atoms):
-				g_idx = NgraftsAtoms + idx
+				# write lattice 
+				ichain+=1
+				for idx in range(self.center_.crystal_.atoms.n_atoms):
+					g_idx = NgraftsAtoms + idx
 
-				FO.write(f"{g_idx+1} {ichain+1} {atomtype2index[self.center_.crystal_.atoms[0].type]} {self.center_.crystal_.atoms.charges[atom_idx]:.3f} {self.center_.crystal_.atoms.positions[idx,0]:.3f} {self.center_.crystal_.atoms.positions[idx,1]:.3f} {self.center_.crystal_.atoms.positions[idx,2]:.3f}\n")
+					FO.write(f"{g_idx+1} {ichain+1} {atomtype2index[self.center_.crystal_.atoms[0].type]} {self.center_.crystal_.atoms.charges[atom_idx]:.3f} {self.center_.crystal_.atoms.positions[idx,0]:.3f} {self.center_.crystal_.atoms.positions[idx,1]:.3f} {self.center_.crystal_.atoms.positions[idx,2]:.3f}\n")
+
+			else:
+				for ichain, igraft in enumerate(self.all_grafts_lst_):
+					ipos = igraft.atoms.positions
+					for atom_idx in range(igraft.atoms.n_atoms):
+						g_idx = NgraftsAtoms + atom_idx
+
+						FO.write(f"{g_idx+1} {ichain+1} {indexed_atomtypes_vec[atom_idx]} {ipos[atom_idx,0]:.3f} {ipos[atom_idx,1]:.3f} {ipos[atom_idx,2]:.3f}\n")
+					
+					NgraftsAtoms += igraft.atoms.n_atoms
+
+				# write lattice 
+				ichain+=1
+				for idx in range(self.center_.crystal_.atoms.n_atoms):
+					g_idx = NgraftsAtoms + idx
+
+					FO.write(f"{g_idx+1} {ichain+1} {atomtype2index[self.center_.crystal_.atoms[0].type]} {self.center_.crystal_.atoms.positions[idx,0]:.3f} {self.center_.crystal_.atoms.positions[idx,1]:.3f} {self.center_.crystal_.atoms.positions[idx,2]:.3f}\n")
 
 			# Bonds
 			FO.write(f"\n")

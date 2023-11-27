@@ -101,7 +101,7 @@ class Atomsk:
 		os.system(f"atomsk --create {self.lattice_type_} {self.lattice_const_} {self.element_} -duplicate {Nx} {Ny} {Nz} {xsffile} >> gen.log")
 
 		# convert xsf to pdb
-		outFileFormat = outFile.split(".")[1]
+		outFileFormat = outFile.split(".")[-1]
 		if outFileFormat == "pdb":
 			self.xsf2pdb(xsffile)
 		elif outFileFormat == "data":
