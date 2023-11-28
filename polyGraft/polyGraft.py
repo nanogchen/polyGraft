@@ -49,6 +49,7 @@ class polyGraft():
 		self.graftAtmGrp_ = None
 
 		# for bigrafts
+		self.graft_bi_ = None
 		self.bigraft_mode_  = None
 
 	def setBinaryGraft(self, graft_bi):
@@ -789,9 +790,9 @@ class polyGraft():
 			pos = self.graftStruct_.atoms.positions
 			box_max,box_min = np.amax(pos, axis=0), np.amin(pos, axis=0)
 			FO.write(f"\n")
-			FO.write(f"{box_min[0]-3:.3f} {box_max[0]+3:.3f} xlo xhi\n")
-			FO.write(f"{box_min[1]-3:.3f} {box_max[1]+3:.3f} ylo yhi\n")
-			FO.write(f"{box_min[2]-3:.3f} {box_max[2]+3:.3f} zlo zhi\n")
+			FO.write(f"{box_min[0]:.3f} {box_max[0]:.3f} xlo xhi\n")
+			FO.write(f"{box_min[1]:.3f} {box_max[1]:.3f} ylo yhi\n")
+			FO.write(f"{box_min[2]:.3f} {box_max[2]:.3f} zlo zhi\n")
 
 			# Atoms
 			FO.write(f"\n")
@@ -874,58 +875,61 @@ class polyGraft():
 				atom_shift += igraft.polyITP_.atoms.n_atoms
 
 			# angles
-			FO.write(f"\n")
-			FO.write(f"Angles\n")
-			FO.write(f"\n")
-			nangles = 0
-			angle_shift = 0
-			for graft_chain in self.graft_chain_idx_:
-				if graft_chain == 0:
-					igraft = self.graft_
-				else:
-					igraft = self.graft_bi_
-	
-				for jangle in igraft.polyITP_.angles:
-					nangles += 1
-					FO.write(f"{nangles} {jangle.type} {jangle._ix[0]+1+angle_shift} {jangle._ix[1]+1+angle_shift} {jangle._ix[2]+1+angle_shift}\n")	
+			if len(self.graft_.polyITP_.angles) > 0 or (self.graft_bi_ is not None and len(self.graft_bi_.polyITP_.angles)>0):
+				FO.write(f"\n")
+				FO.write(f"Angles\n")
+				FO.write(f"\n")
+				nangles = 0
+				angle_shift = 0
+				for graft_chain in self.graft_chain_idx_:
+					if graft_chain == 0:
+						igraft = self.graft_
+					else:
+						igraft = self.graft_bi_
+		
+					for jangle in igraft.polyITP_.angles:
+						nangles += 1
+						FO.write(f"{nangles} {jangle.type} {jangle._ix[0]+1+angle_shift} {jangle._ix[1]+1+angle_shift} {jangle._ix[2]+1+angle_shift}\n")	
 
-				angle_shift += igraft.polyITP_.atoms.n_atoms
+					angle_shift += igraft.polyITP_.atoms.n_atoms
 
 			# dihedrals
-			FO.write(f"\n")
-			FO.write(f"Dihedrals\n")
-			FO.write(f"\n")
-			ndihedrals = 0
-			dihedral_shift = 0
-			for graft_chain in self.graft_chain_idx_:
-				if graft_chain == 0:
-					igraft = self.graft_
-				else:
-					igraft = self.graft_bi_	
+			if len(self.graft_.polyITP_.dihedrals) > 0 or (self.graft_bi_ is not None and len(self.graft_bi_.polyITP_.dihedrals)>0):
+				FO.write(f"\n")
+				FO.write(f"Dihedrals\n")
+				FO.write(f"\n")
+				ndihedrals = 0
+				dihedral_shift = 0
+				for graft_chain in self.graft_chain_idx_:
+					if graft_chain == 0:
+						igraft = self.graft_
+					else:
+						igraft = self.graft_bi_	
 
-				for jdihedral in igraft.polyITP_.dihedrals:
-					ndihedrals += 1
-					FO.write(f"{ndihedrals} {jdihedral.type} {jdihedral._ix[0]+1+dihedral_shift} {jdihedral._ix[1]+1+dihedral_shift} {jdihedral._ix[2]+1+dihedral_shift} {jdihedral._ix[3]+1+dihedral_shift}\n")
-				
-				dihedral_shift += igraft.polyITP_.atoms.n_atoms
+					for jdihedral in igraft.polyITP_.dihedrals:
+						ndihedrals += 1
+						FO.write(f"{ndihedrals} {jdihedral.type} {jdihedral._ix[0]+1+dihedral_shift} {jdihedral._ix[1]+1+dihedral_shift} {jdihedral._ix[2]+1+dihedral_shift} {jdihedral._ix[3]+1+dihedral_shift}\n")
+					
+					dihedral_shift += igraft.polyITP_.atoms.n_atoms
 
 			# impropers
-			FO.write(f"\n")
-			FO.write(f"Impropers\n")
-			FO.write(f"\n")
-			nimpropers = 0
-			improper_shift = 0
-			for graft_chain in self.graft_chain_idx_:
-				if graft_chain == 0:
-					igraft = self.graft_
-				else:
-					igraft = self.graft_bi_
-	
-				for jimproper in igraft.polyITP_.impropers:
-					nimpropers += 1
-					FO.write(f"{nimpropers} {jimproper.type} {jimproper._ix[0]+1+improper_shift} {jimproper._ix[1]+1+improper_shift} {jimproper._ix[2]+1+improper_shift} {jimproper._ix[3]+1+improper_shift}\n")
+			if len(self.graft_.polyITP_.impropers) > 0 or (self.graft_bi_ is not None and len(self.graft_bi_.polyITP_.impropers)>0):
+				FO.write(f"\n")
+				FO.write(f"Impropers\n")
+				FO.write(f"\n")
+				nimpropers = 0
+				improper_shift = 0
+				for graft_chain in self.graft_chain_idx_:
+					if graft_chain == 0:
+						igraft = self.graft_
+					else:
+						igraft = self.graft_bi_
+		
+					for jimproper in igraft.polyITP_.impropers:
+						nimpropers += 1
+						FO.write(f"{nimpropers} {jimproper.type} {jimproper._ix[0]+1+improper_shift} {jimproper._ix[1]+1+improper_shift} {jimproper._ix[2]+1+improper_shift} {jimproper._ix[3]+1+improper_shift}\n")
 
-				improper_shift += igraft.polyITP_.atoms.n_atoms
+					improper_shift += igraft.polyITP_.atoms.n_atoms
 
 	def toPDB(self, fname):
 
