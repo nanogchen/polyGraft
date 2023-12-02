@@ -2,7 +2,7 @@
 
 <img src="polyGraft.jpg" alt="drawing" width="600"/>
 
-# Prerequisites
+# Prerequisites and installation
 - [atomsk](https://atomsk.univ-lille.fr/) for hard substrate generation (any other tools should also be fine, save in pdb file format) (tested v0.12)
 - [MDAnalysis](https://www.mdanalysis.org/) file IO (tested v2.5.0)
 - [numba](https://numba.pydata.org/) accelerated array processing (tested v0.57.1)
