@@ -17,7 +17,7 @@ Installation steps (tested with Anaconda):
 5. activate the polyGraft environment and use polyGraft for generation under /path/to/polyGraft/examples
 > conda activate polyGraft
 
-**NOTE**: to use other polymers (rather than PEO) for polymer brush generation using polyGraft, one must provide the gro/itp files (for Gromacs simulations) or data file (for LAMMPS simulations) of the polymer. The user should be responsible for the results in this case as no validity checks on the input files were applied (i.e., validate the connectivity or topology, and force field parameters used for MD simulation etc.)
+**NOTE**: to use other polymers (rather than PEO) for polymer brush generation using polyGraft, one must provide the gro/itp files (for Gromacs simulations) or data file (for LAMMPS simulations) of the polymer. The user should be responsible for the results in this case as no validity checks on the input files were applied (i.e., validate the connectivity or topology, and force field parameters used for further MD simulation etc.)
 
 # How to cite
 1. Chen, Guang. "polyGraft 1.0: A Program for Molecular Structure and Topology Generation of Polymer-Grafted Hybrid Nanostructures". J. Comput. Chem. 2023, 44(28), 2230. https://doi.org/10.1002/jcc.27206
