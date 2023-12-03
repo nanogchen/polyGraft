@@ -746,6 +746,12 @@ class polyGraft():
 			fo.write(f"# bonds\n")
 			for key, value in bondtype2index.items():
 				fo.write(f"{key}:{value}\n")
+			# for poly-latt
+			if self.graft_bi_ is None:
+				fo.write(f"(Polymer grafting atom,substrate atom):{len(unique_btypes)+1}\n")
+			else:
+				fo.write(f"(A-graft grafting atom,substrate atom):{len(unique_btypes)+1}\n")
+				fo.write(f"(B-graft grafting atom,substrate atom):{len(unique_btypes)+2}\n")
 
 			fo.write(f"\n")
 			fo.write(f"# angles\n")
@@ -782,7 +788,10 @@ class polyGraft():
 			FO.write(f"{len(self.graftStruct_.atoms.impropers)} impropers\n")
 			FO.write(f"\n")
 			FO.write(f"{len(unique_atypes)} atom types\n") 
-			FO.write(f"{len(unique_btypes)+1} bond types\n")
+			if self.graft_bi_ is None:
+				FO.write(f"{len(unique_btypes)+1} bond types\n")
+			else:
+				FO.write(f"{len(unique_btypes)+2} bond types\n")
 			FO.write(f"{len(unique_angtypes)} angle types\n")
 			FO.write(f"{len(unique_dtypes)} dihedral types\n")
 			FO.write(f"{len(unique_itypes)} improper types\n")
@@ -800,11 +809,13 @@ class polyGraft():
 			FO.write(f"\n")
 
 			# write polymer first
-			atomtypes_vec = self.graft_.polyGRO_.atoms.types
-			indexed_atomtypes_vec = [atomtype2index[i] for i in atomtypes_vec]
 			NgraftsAtoms = 0
 			if with_charges:
 				for ichain, igraft in enumerate(self.all_grafts_lst_):
+					ipos = igraft.atoms.positions
+
+					atomtypes_vec = igraft.atoms.types
+					indexed_atomtypes_vec = [atomtype2index[i] for i in atomtypes_vec]
 					ipos = igraft.atoms.positions
 					for atom_idx in range(igraft.atoms.n_atoms):
 						g_idx = NgraftsAtoms + atom_idx
@@ -823,6 +834,11 @@ class polyGraft():
 			else:
 				for ichain, igraft in enumerate(self.all_grafts_lst_):
 					ipos = igraft.atoms.positions
+
+					atomtypes_vec = igraft.atoms.types
+					indexed_atomtypes_vec = [atomtype2index[i] for i in atomtypes_vec]
+					ipos = igraft.atoms.positions
+
 					for atom_idx in range(igraft.atoms.n_atoms):
 						g_idx = NgraftsAtoms + atom_idx
 

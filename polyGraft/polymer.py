@@ -371,4 +371,114 @@ class Polymer():
 class cgPolymer():
 
 	def __init__(self):
-		pass
+		self.Natoms_ = 0
+		self.atoms_ = None
+		self.bonds_ = None
+		self.angles_ = None
+		self.dihedrals_ = None
+		self.impropers_ = None
+
+		self.positions_ = None
+
+	def setChain(self, chain_length, block_frac, type_idx_shift=0):
+		# block_frac is a list of fraction of each block
+		assert np.sum(np.array(block_frac)) == 1, f"The total fraction should be 1!"
+
+		self.Natoms_ = chain_length
+		self.block_frac_ = block_frac
+
+		self.getTopo(type_idx_shift)
+		self.getPos()
+
+	def idx2type(self, idx):
+		# get the type from the atom index
+		block_idx = []
+		for i in range(len(self.block_frac_)-1):
+			start = sum(self.block_frac_[:i+1])*self.Natoms_
+			block_idx.append(start)
+
+		# add ends
+		block_idx.append(self.Natoms_)
+
+		for iblock in range(len(self.block_frac_)):
+			if idx < block_idx[iblock]:
+				type_idx = iblock + 1
+				break
+
+		return type_idx
+
+	def getTopo(self, type_idx_shift=0):
+		atomtype = [i+1 for i in range(len(self.block_frac_))]
+		self.atoms_ = []
+		self.bonds_ = []
+
+		# atoms
+		for iatom in range(self.Natoms_):
+			atom_i = [iatom+1, 1, self.idx2type(iatom)+type_idx_shift, 0, 0, iatom*1]
+			self.atoms_.append(atom_i)
+
+		# bonds
+		for ibond in range(self.Natoms_-1):
+			bond_i = [ibond+1, 1, ibond+1, ibond+2]
+			self.bonds_.append(bond_i)
+
+	def getPos(self):
+		xyz = []
+
+		for iatom in self.atoms_:
+			xyz.append([iatom[3],iatom[4],iatom[5]])
+
+		self.positions_ = np.array(xyz)
+
+	def toDATA(self, fname):
+		with open(fname, 'w') as FO:
+			FO.write(f"lammps data file written by polyGraft\n")
+			FO.write(f"\n")			
+			FO.write(f"{self.Natoms_} atoms\n")
+			FO.write(f"{self.Natoms_-1} bonds\n")
+			FO.write(f"0 angles\n")			
+			FO.write(f"0 dihedrals\n")			
+			FO.write(f"0 impropers\n")			
+			FO.write(f"\n")			
+			FO.write(f"{len(self.block_frac_)} atom types\n")			
+			FO.write(f"1 bond types\n")			
+			FO.write(f"0 angle types\n")			
+			FO.write(f"0 dihedral types\n")			
+			FO.write(f"0 improper types\n")			
+
+			pos = self.positions_
+			box_max,box_min = np.amax(pos, axis=0), np.amin(pos, axis=0)
+			FO.write(f"\n")
+			FO.write(f"{box_min[0]-3:.3f} {box_max[0]+3:.3f} xlo xhi\n")
+			FO.write(f"{box_min[1]-3:.3f} {box_max[1]+3:.3f} ylo yhi\n")
+			FO.write(f"{box_min[2]-3:.3f} {box_max[2]+3:.3f} zlo zhi\n")
+
+			# Atoms
+			FO.write(f"\n")
+			FO.write(f"Atoms\n")
+			FO.write(f"\n")
+			for iatom in self.atoms_:
+				FO.write(f"{iatom[0]} {iatom[1]} {iatom[2]} {iatom[3]} {iatom[4]} {iatom[5]}\n")
+
+			# Bonds
+			FO.write(f"\n")
+			FO.write(f"Bonds\n")
+			FO.write(f"\n")
+			for ibond in self.bonds_:
+				FO.write(f"{ibond[0]} {ibond[1]} {ibond[2]} {ibond[3]}\n")
+
+if __name__ == '__main__':
+
+	# linear chains
+	linear = cgPolymer()
+	linear.setChain(12, [1.0], type_idx_shift=1)
+	linear.toDATA(f"linear_N12_type2.data")	
+	
+	# block co-polymer
+	AB_bcp = cgPolymer()
+	AB_bcp.setChain(20, [0.5, 0.5])
+	AB_bcp.toDATA("bcp20_AB.data")
+
+	ABC_bcp = cgPolymer()
+	ABC_bcp.setChain(20, [0.3, 0.4, 0.3])
+	ABC_bcp.toDATA("bcp20_ABC.data")		
