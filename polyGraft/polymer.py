@@ -366,3 +366,9 @@ class Polymer():
 		self.polyGRO_.add_TopologyAttr('elements', atomnames)
 		self.polyGRO_.add_TopologyAttr('resnames', [self.polyname_])
 		self.polyGRO_.load_new(np.array(pos), order='fac')
+
+
+class cgPolymer():
+
+	def __init__(self):
+		pass
