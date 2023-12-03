@@ -378,6 +378,8 @@ class cgPolymer():
 		self.dihedrals_ = None
 		self.impropers_ = None
 
+		self.n_atypes_ = 0
+		self.n_btypes_ = 0
 		self.positions_ = None
 
 	def setChain(self, chain_length, block_frac, type_idx_shift=0):
@@ -386,26 +388,54 @@ class cgPolymer():
 
 		self.Natoms_ = chain_length
 		self.block_frac_ = block_frac
+		self.n_atypes_ = len(block_frac)
 
 		self.getTopo(type_idx_shift)
 		self.getPos()
 
-	def idx2type(self, idx):
+	def getAtomType(self):
 		# get the type from the atom index
-		block_idx = []
+		block_idx = [0]
 		for i in range(len(self.block_frac_)-1):
 			start = sum(self.block_frac_[:i+1])*self.Natoms_
-			block_idx.append(start)
+			block_idx.append(int(start))
 
 		# add ends
 		block_idx.append(self.Natoms_)
 
-		for iblock in range(len(self.block_frac_)):
-			if idx < block_idx[iblock]:
-				type_idx = iblock + 1
-				break
+		# the out
+		type_idx_all = [0 for _ in range(self.Natoms_)]
+		atype = 0
+		for iblock in range(len(block_idx)-1):
+			atype += 1
+			start = block_idx[iblock]
+			end = block_idx[iblock+1]
+			type_idx_all[start: end] = [atype for i in range(start, end)]
 
-		return type_idx
+		return type_idx_all
+
+	def bondidx2type(self, ibond):
+		# get the bond type from the atom type of composing atoms
+
+		a1 = ibond[0]
+		a2 = ibond[1]
+
+		# total atom types
+		n_atypes = len(self.block_frac_)
+		bond_dict = {}
+		n_btypes = 0
+		for atype_i in range(n_atypes):
+			bond_dict[f"({atype_i+1}, {atype_i+1})"] = atype_i+1
+			n_btypes += 1
+
+		# cross term
+		for atype_i in range(n_atypes-1):
+			n_btypes += 1
+			bond_dict[f"({atype_i+1}, {atype_i+2})"] = n_btypes
+
+		self.n_btypes_ = len(bond_dict.keys())
+
+		return bond_dict[f"({a1}, {a2})"]
 
 	def getTopo(self, type_idx_shift=0):
 		atomtype = [i+1 for i in range(len(self.block_frac_))]
@@ -413,13 +443,14 @@ class cgPolymer():
 		self.bonds_ = []
 
 		# atoms
+		atype_idx_all = self.getAtomType()
 		for iatom in range(self.Natoms_):
-			atom_i = [iatom+1, 1, self.idx2type(iatom)+type_idx_shift, 0, 0, iatom*1]
+			atom_i = [iatom+1, 1, atype_idx_all[iatom]+type_idx_shift, 0, 0, iatom*1]
 			self.atoms_.append(atom_i)
 
 		# bonds
 		for ibond in range(self.Natoms_-1):
-			bond_i = [ibond+1, 1, ibond+1, ibond+2]
+			bond_i = [ibond+1, self.bondidx2type([atype_idx_all[ibond], atype_idx_all[ibond+1]]), ibond+1, ibond+2]
 			self.bonds_.append(bond_i)
 
 	def getPos(self):
@@ -440,8 +471,8 @@ class cgPolymer():
 			FO.write(f"0 dihedrals\n")			
 			FO.write(f"0 impropers\n")			
 			FO.write(f"\n")			
-			FO.write(f"{len(self.block_frac_)} atom types\n")			
-			FO.write(f"1 bond types\n")			
+			FO.write(f"{self.n_atypes_} atom types\n")			
+			FO.write(f"{self.n_btypes_} bond types\n")			
 			FO.write(f"0 angle types\n")			
 			FO.write(f"0 dihedral types\n")			
 			FO.write(f"0 improper types\n")			
@@ -469,16 +500,16 @@ class cgPolymer():
 
 if __name__ == '__main__':
 
-	# linear chains
-	linear = cgPolymer()
-	linear.setChain(12, [1.0], type_idx_shift=1)
-	linear.toDATA(f"linear_N12_type2.data")	
+	# # linear chains
+	# linear = cgPolymer()
+	# linear.setChain(12, [1.0], type_idx_shift=1)
+	# linear.toDATA(f"linear_N12_type2.data")	
 	
-	# block co-polymer
-	AB_bcp = cgPolymer()
-	AB_bcp.setChain(20, [0.5, 0.5])
-	AB_bcp.toDATA("bcp20_AB.data")
+	# # block co-polymer
+	# AB_bcp = cgPolymer()
+	# AB_bcp.setChain(20, [0.5, 0.5])
+	# AB_bcp.toDATA("bcp20_AB.data")
 
-	ABC_bcp = cgPolymer()
-	ABC_bcp.setChain(20, [0.3, 0.4, 0.3])
-	ABC_bcp.toDATA("bcp20_ABC.data")		
+	# ABC_bcp = cgPolymer()
+	# ABC_bcp.setChain(20, [0.3, 0.4, 0.3])
+	# ABC_bcp.toDATA("bcp20_ABC.data")		
