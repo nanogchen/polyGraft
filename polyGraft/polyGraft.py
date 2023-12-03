@@ -882,12 +882,14 @@ class polyGraft():
 			for idx, graft_chain in enumerate(self.graft_chain_idx_):
 				if graft_chain == 0:
 					igraft = self.graft_
+					bondtype = len(bondtype2index.keys())+1
 				else:
 					igraft = self.graft_bi_
+					bondtype = len(bondtype2index.keys())+2
 
 				poly_idx = 1+atom_shift			
 				nbonds += 1
-				FO.write(f"{nbonds} {len(bondtype2index.keys())+1} {poly_idx} {self.centerGftedIdx_[idx]+NgraftsAtoms}\n")
+				FO.write(f"{nbonds} {bondtype} {poly_idx} {self.centerGftedIdx_[idx]+NgraftsAtoms}\n")
 				atom_shift += igraft.polyITP_.atoms.n_atoms
 
 			# angles
