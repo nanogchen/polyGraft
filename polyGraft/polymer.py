@@ -498,7 +498,7 @@ class cgPolymer():
 			for ibond in self.bonds_:
 				FO.write(f"{ibond[0]} {ibond[1]} {ibond[2]} {ibond[3]}\n")
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
 
 	# # linear chains
 	# linear = cgPolymer()
