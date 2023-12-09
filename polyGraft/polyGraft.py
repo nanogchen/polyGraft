@@ -697,7 +697,7 @@ class polyGraft():
 					else:
 						igraft = self.graft_bi_
 
-					for jdihedral in self.graft_.polyITP_.dihedrals:
+					for jdihedral in igraft.polyITP_.dihedrals:
 						FO.write(f"{jdihedral._ix[0]+1+dihedral_shift} {jdihedral._ix[3]+1+dihedral_shift} {1}\n")
 
 					dihedral_shift += igraft.polyITP_.atoms.n_atoms
