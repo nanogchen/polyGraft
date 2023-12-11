@@ -23,6 +23,7 @@ import numpy as np
 import MDAnalysis as mda
 from polymer import Polymer,pars_dict
 from crystal import Crystal
+from cgCrystal import Crystal
 from atomsk import Atomsk
 from utils import getNN_two, getTransformationMat
 import utils
@@ -64,7 +65,7 @@ class polyGraft():
 	def setGraftingDensity(self, graftingDensity):
 		if isinstance(self.center_, Crystal):
 			if graftingDensity > 0.06:
-				print(f"WARNING: Grafting density cannot be too large in real units (smaller than 0.06 A^-2)!")
+				print(f"WARNING: Grafting density cannot be too large in real units (smaller than 0.06 A^-2). Ignore for LJ unit!")
 			self.graftingDensity_ = graftingDensity		
 
 			# spacing 
@@ -112,6 +113,9 @@ class polyGraft():
 		# assemble two components together
 		
 		if isinstance(self.center_, Crystal):
+			self.graftSoft2Hard(random_grafting)
+
+		elif isinstance(self.center_, cgCrystal.Crystal):
 			self.graftSoft2Hard(random_grafting)
 
 		elif isinstance(self.center_, Polymer):
