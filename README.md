@@ -5,7 +5,7 @@
 - Unigrafts grafting in coarse-grained format (LAMMPS)
 - Binary grafts in coarse-grained format (LAMMPS)
 
-<img src="polyGraft.jpg" alt="drawing" width="600"/>
+<img src="polyGraft.jpg" alt="drawing" width="800"/>
 
 # Prerequisites and installation
 - [atomsk](https://atomsk.univ-lille.fr/) for hard substrate generation (any other tools should also be fine, save in pdb file format) (tested v0.12)
