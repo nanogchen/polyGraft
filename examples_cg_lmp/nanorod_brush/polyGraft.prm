@@ -1,0 +1,14 @@
+# atoms
+1:1
+Au:2
+
+# bonds
+('1', '1'):1
+('Au', 'Au'):2
+(Polymer grafting atom,substrate atom):3
+
+# angles
+
+# dihedrals
+
+# impropers
