@@ -1,5 +1,10 @@
 # polyGraft: A Program for Molecular Structure and Topology Generation of Polymer-Grafted Hybrid Nanostructures
 
+- Unigrafts grafting in atomistic format (GROMACS and LAMMPS)
+- Binary grafts in atomistic format (GROMACS and LAMMPS)
+- Unigrafts grafting in coarse-grained format (LAMMPS)
+- Binary grafts in coarse-grained format (LAMMPS)
+
 <img src="polyGraft.jpg" alt="drawing" width="600"/>
 
 # Prerequisites and installation
@@ -24,7 +29,12 @@ Installation steps (tested with Anaconda):
 3. Chen, Guang, and Elena Dormidontova. "PEO-Grafted Gold Nanopore: Grafting Density, Chain Length, and Curvature Effects." Macromolecules 55.12 (2022): 5222-5232. https://doi.org/10.1021/acs.macromol.2c00323
 
 # How to use
-Representative examples are given in the [**examples**](https://github.com/nanogchen/polyGraft/tree/main/examples) folder (for GROMACS format) and [**examples_lmp**](https://github.com/nanogchen/polyGraft/tree/main/examples_lmp) (for LAMMPS format). For any nanostructure generation, it takes two steps generally:
+Representative examples are given in the **examples*** directories, specifically
+- *lmp: for lammps format
+- *bi: for binary grafts used for grafting procedure
+- *cg: coarse-grained data (bead-spring model)
+
+For any nanostructure generation, it takes two steps generally:
 1. generate or import the substrate material (hard or soft), and polymer (gro and itp or data files);
 2. generate the structure and topology using polyGraft. For poly-g-hard, the files are in .gro/.itp or .data format, while for poly-g-soft, they are in pdb/rtp format.
 
