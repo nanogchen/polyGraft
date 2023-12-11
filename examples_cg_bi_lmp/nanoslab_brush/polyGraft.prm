@@ -1,0 +1,17 @@
+# atoms
+1:1
+2:2
+Au:3
+
+# bonds
+('1', '1'):1
+('2', '2'):2
+('Au', 'Au'):3
+(A-graft grafting atom,substrate atom):4
+(B-graft grafting atom,substrate atom):5
+
+# angles
+
+# dihedrals
+
+# impropers
