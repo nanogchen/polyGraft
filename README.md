@@ -4,7 +4,8 @@
 - Binary grafts in atomistic format (GROMACS and LAMMPS)
 - Unigrafts grafting in coarse-grained format (LAMMPS)
 - Binary grafts in coarse-grained format (LAMMPS)
-
+- Binary grafting: homogeneous, random, and Janus
+  
 <img src="polyGraft.jpg" alt="drawing" width="800"/>
 
 # Prerequisites and installation
