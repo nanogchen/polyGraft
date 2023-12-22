@@ -5,7 +5,7 @@
 - Unigrafts grafting in coarse-grained format (LAMMPS)
 - Binary grafts in coarse-grained format (LAMMPS)
   
-Binary grafting includes: homogeneous, random, and Janus
+Binary grafting mode includes: homogeneous, random, and Janus
   
 <img src="polyGraft.jpg" alt="drawing" width="800"/>
 
