@@ -1,9 +1,10 @@
 # polyGraft: A Program for Molecular Structure and Topology Generation of Polymer-Grafted Hybrid Nanostructures
 
-- Unigrafts grafting in atomistic format (GROMACS and LAMMPS)
-- Binary grafts in atomistic format (GROMACS and LAMMPS)
-- Unigrafts grafting in coarse-grained format (LAMMPS)
-- Binary grafts in coarse-grained format (LAMMPS)
+**Types of polymer-grafted nanostructure that can be generated**:
+- Unigraft grafting in atomistic format (GROMACS and LAMMPS)
+- Binary grafts grafting in atomistic format (GROMACS and LAMMPS)
+- Unigraft grafting in coarse-grained format (LAMMPS)
+- Binary grafts grafting in coarse-grained format (LAMMPS)
   
 Binary grafting mode includes: homogeneous, random, and Janus
   
