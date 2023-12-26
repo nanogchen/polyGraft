@@ -50,11 +50,24 @@ class Polymer():
 		self.polyname_ = poly_name
 		self.Nrepeats_ = 0
 		self.topology_ = None
+
+		# geometry and topology
 		self.polyGRO_ = None
 		self.polyITP_ = None
 
 	def setNrepeats(self, Nrepeats):
 		self.Nrepeats_ = Nrepeats
+
+	def readPDB(self, PDBfile, preprocess=True):
+		# read pdb file
+		self.polyGRO_ = mda.Universe(PDBfile)
+
+		if preprocess:
+			# center the polymer
+			self.center2graft()
+
+			# align the minimum Rg axis to the x-axis (defaults)
+			self.align(self.getOrient(), np.array([1, 0, 0]))
 
 	def readGRO(self, GROfile):
 		# read from files
