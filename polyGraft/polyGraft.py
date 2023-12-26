@@ -23,7 +23,7 @@ import numpy as np
 import MDAnalysis as mda
 from polymer import Polymer,pars_dict
 from crystal import Crystal
-from cgCrystal import Crystal
+import cgCrystal 
 from atomsk import Atomsk
 from utils import getNN_two, getTransformationMat
 import utils
