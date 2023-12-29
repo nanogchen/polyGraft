@@ -30,7 +30,7 @@ class SixStepGUI:
         self.label_choice = tk.Label(self.master, text="Please select choice:")
         self.label_choice.pack()
 
-        self.select_box = tk.OptionMenu(self.master, self.selection, *self.options)
+        self.select_box = tk.OptionMenu(self.master, self.selection, *self.options, command=self.update_layout)
         self.select_box.pack(pady=5)
 
         self.next_button = tk.Button(self.master, text="Next", command=self.next_step)
@@ -54,6 +54,15 @@ class SixStepGUI:
     def select_file(self):
         file_path = filedialog.askopenfilename()
         self.file_path.set(file_path)
+
+    def update_layout(self, choice):
+        # Update the layout based on the selected choice
+        if choice == "Choice 1":
+            # For Choice 1 layout
+            pass  # Placeholder for updating the layout for Choice 1
+        elif choice == "Choice 2":
+            # For Choice 2 layout
+            pass  # Placeholder for updating the layout for Choice 2
 
     def next_step(self):
         user_input = self.entry.get()
