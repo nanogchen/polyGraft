@@ -21,11 +21,13 @@ import os,sys
 pady=5
 
 step_dict = {1: "select resolution",
-			 2: "select format",
-			 3: "grafts type",
-			 4: "substrate type",
-			 5: "grafting density",
-			 6: "output"}
+			 2: "select data format",
+			 3: "select grafts type",
+			 4: "import graft file",
+			 5: "substrate type",
+			 6: "substrate sizes",
+			 7: "grafting density",
+			 8: "output"}
 
 class polyGraftGUI:
 
@@ -60,6 +62,20 @@ class polyGraftGUI:
 
 		self.model_substrate_type = self.substrate_type.get()
 		print(f"Step 5 selected value: {self.model_substrate_type}")
+
+	def get_slab_values(self):
+
+		self.slab_length = self.ent_slab_length.get()
+		self.slab_width = self.ent_slab_width.get()
+		self.slab_height = self.ent_slab_height.get()
+
+	def get_grafting_density(self):
+
+		self.grafting_density = self.ent_grafting_density.get()
+
+	def get_fname(self):
+
+		self.outfname = self.ent_fname.get()
 
 	def open_file_lmp_uni(self):
 		file_path = filedialog.askopenfilename(
@@ -159,6 +175,8 @@ class polyGraftGUI:
 		self.btn_step1 = tk.Button(self.master, text="Next", command=self.step2)
 		self.btn_step1.pack(pady=pady)
 
+		self.update_windows()
+
 	def step2(self):
 
 		self.lbl_step2 = tk.Label(self.master, text="Step 2: select data format")
@@ -177,6 +195,11 @@ class polyGraftGUI:
 		self.btn_step2 = tk.Button(self.master, text="Next", command=self.step3)
 		self.btn_step2.pack(pady=pady)
 
+		prev_button = tk.Button(self.master, text="Previous", command=self.step1)
+		prev_button.pack(pady=pady)
+
+		self.update_windows()
+
 	def step3(self):
 		self.lbl_step3 = tk.Label(self.master, text="Step 3: select grafts type")
 		self.lbl_step3.pack(pady=pady)
@@ -193,8 +216,17 @@ class polyGraftGUI:
 
 		self.btn_step3 = tk.Button(self.master, text="Next", command=self.step4)
 		self.btn_step3.pack(pady=pady)
+
+		prev_button = tk.Button(self.master, text="Previous", command=self.step2)
+		prev_button.pack(pady=pady)
+
+		self.update_windows()
 	
 	def step4(self):
+
+		self.lbl_step4 = tk.Label(self.master, text="Step 4: import graft data file")
+		self.lbl_step4.pack(pady=pady)
+
 		if self.model_graft_type == "unigraft":
 			self.step4_1()
 
@@ -203,7 +235,7 @@ class polyGraftGUI:
 
 		else:
 			print(f"Unknown setting for graft_type ({self.graft_type})")
-			sys.exit(0)
+			sys.exit(0)		
 
 		self.btn_graft_type = tk.Button(self.master, text="OK")
 		self.btn_graft_type.pack(pady=pady)
@@ -211,12 +243,15 @@ class polyGraftGUI:
 		self.btn_step4 = tk.Button(self.master, text="Next", command=self.step5)
 		self.btn_step4.pack(pady=pady)
 
+		prev_button = tk.Button(self.master, text="Previous", command=self.step3)
+		prev_button.pack(pady=pady)
+
+		self.update_windows()
+
 	def step4_1(self):
 		# for uni-grafts
 		if self.model_format == "LAMMPS":
-			# import .data file for graft
-			self.lbl_step4_1 = tk.Label(self.master, text="Step 4: import graft data file")
-			self.lbl_step4_1.pack(pady=pady)
+			# import .data file for graft			
 
 			# file box
 			btn_lmp_uni = tk.Button(self.master, text="Select LAMMPS DATA File", command=self.open_file_lmp_uni)
@@ -224,8 +259,6 @@ class polyGraftGUI:
 
 		elif self.model_format == "GROMACS":
 			# import .gro and .itp file for graft
-			self.lbl_step4_2 = tk.Label(self.master, text="Step 4: import graft gro/itp file")
-			self.lbl_step4_2.pack(pady=pady)
 
 			# file box
 			btn_gmx_uni_gro = tk.Button(self.master, text="Select GROMACS gro File", command=self.open_file_gmx_uni_gro)
@@ -238,8 +271,6 @@ class polyGraftGUI:
 		# for bi-grafts
 		if self.model_format == "LAMMPS":
 			# import .data file for graft
-			self.lbl_step4_1 = tk.Label(self.master, text="Step 4: import graft data file")
-			self.lbl_step4_1.pack(pady=pady)
 
 			# for the first graft
 			btn_lmp_bi = tk.Button(self.master, text="Select LAMMPS DATA File for the 1st graft", command=self.open_file_lmp_bi_1st)
@@ -251,8 +282,6 @@ class polyGraftGUI:
 
 		elif self.model_format == "GROMACS":
 			# import .gro and .itp file for graft
-			self.lbl_step4_2 = tk.Label(self.master, text="Step 4: import graft gro/itp file")
-			self.lbl_step4_2.pack(pady=pady)
 
 			# for the first graft
 			btn_gmx_bi_gro = tk.Button(self.master, text="Select GROMACS gro File for the 1st graft", command=self.open_file_gmx_bi_gro_1st)
@@ -278,7 +307,7 @@ class polyGraftGUI:
 		self.substrate_type.set(self.step5_options[0])
 
 		self.select_box = tk.OptionMenu(self.master, self.substrate_type, *self.step5_options)
-		self.select_box.pack(pady=5)
+		self.select_box.pack(pady=pady)
 
 		self.btn_substrate_type = tk.Button(self.master, text="OK", command=self.get_substrate_type)
 		self.btn_substrate_type.pack(pady=pady)
@@ -286,111 +315,111 @@ class polyGraftGUI:
 		self.btn_step5 = tk.Button(self.master, text="Next", command=self.step6)
 		self.btn_step5.pack(pady=pady)
 
+		prev_button = tk.Button(self.master, text="Previous", command=self.step4)
+		prev_button.pack(pady=pady)
+
+		self.update_windows()
+
 	def step6(self):
-		pass
-		
-	def create_widgets(self):
-		# step1: resolution settings
-		self.label = tk.Label(self.master, text="Step 1: select resolution")
-		self.label.pack(pady=10)
 
-		self.options = ["Atomistic", "Coarse grained"]
-		self.selection = tk.StringVar()
-		self.selection.set(self.options[0])
-		self.label_choice = tk.Label(self.master, text="Please select resolution:")
-		self.label_choice.pack()
+		if self.model_substrate_type == "slab":
+			self.step6_slab()
 
-		self.select_box = tk.OptionMenu(self.master, self.selection, *self.options)
-		self.select_box.pack(pady=5)
+		elif self.model_substrate_type == "rod":
+			self.step6_rod()
 
-		self.next_button = tk.Button(self.master, text="Next", command=self.next_step)
-		self.next_button.pack(pady=5)
+		elif self.model_substrate_type == "pore":
+			self.step6_pore()
 
-		self.prev_button = tk.Button(self.master, text="Previous", command=self.prev_step, state=tk.DISABLED)
-		self.prev_button.pack(pady=5)
+		elif self.model_substrate_type == "sphere":
+			self.step6_sphere()
 
-		self.run_button = tk.Button(self.master, text="Run", command=self.run_process, state=tk.DISABLED)
-		self.run_button.pack(pady=5)
-
-	def next_step(self):
-		self.current_step.set(self.current_step.get() + 1)
-		step = self.current_step.get()
-
-		if step == 2:
-
-			self.label = tk.Label(self.master, text="Step 2: select format")
-			self.label.pack(pady=10)
-
-			self.options = ["GROMACS", "LAMMPS"]
-			self.selection = tk.StringVar()
-			self.selection.set(self.options[0])
-			self.label_choice = tk.Label(self.master, text="Please select format:")
-			self.label_choice.pack()
-
-			self.select_box = tk.OptionMenu(self.master, self.selection, *self.options)
-			self.select_box.pack(pady=5)
-
-		elif step == 3:
-
-			self.label = tk.Label(self.master, text="Step 3: select grafts type")
-			self.label.pack(pady=10)
-
-			self.options = ["unigraft", "bigraft"]
-			self.selection = tk.StringVar()
-			self.selection.set(self.options[0])
-			self.label_choice = tk.Label(self.master, text="Please select grafts type:")
-			self.label_choice.pack()
-
-			self.select_box = tk.OptionMenu(self.master, self.selection, *self.options)
-			self.select_box.pack(pady=5)
-
-		elif step == 4:
-
-			self.label = tk.Label(self.master, text="Step 4: select substrate type")
-			self.label.pack(pady=10)
-
-			self.options = ["slab", "rod", "pore", "sphere"]
-			self.selection = tk.StringVar()
-			self.selection.set(self.options[0])
-			self.label_choice = tk.Label(self.master, text="Please select substrate type:")
-			self.label_choice.pack()
-
-			self.select_box = tk.OptionMenu(self.master, self.selection, *self.options)
-			self.select_box.pack(pady=5)
-
-		elif step == 5:
-			self.label = tk.Label(self.master, text="Step 5: set substrate size")
-			self.label.pack(pady=10)
-
-			self.file_path = tk.StringVar()
-			self.entry = tk.Entry(self.master, textvariable=self.file_path)
-			self.entry.pack(pady=5)
-
-			user_input = self.entry.get()
-			selected_option = self.selection.get()
-			self.label_choice = tk.Label(self.master, text="Please set substrate size:")
-			self.label_choice.pack()
-
-		elif step == 6:
-			self.label = tk.Label(self.master, text="Step 6: set output file name")
-			self.label.pack(pady=10)
-
-			user_input = self.entry.get()
-			selected_option = self.selection.get()
-			self.label_choice = tk.Label(self.master, text="Please set output file name:")
-			self.label_choice.pack()
-
-			self.select_box = tk.OptionMenu(self.master, self.selection, *self.options)
-			self.select_box.pack(pady=5)
-
-		if step == 6:
-			self.next_button.config(state=tk.DISABLED)
 		else:
-			self.next_button.config(state=tk.NORMAL)
+			print(f"Unknown setting for substrate_type ({self.model_substrate_type})")
+			sys.exit(0)
 
-		self.prev_button.config(state=tk.NORMAL)
+		self.btn_step6 = tk.Button(self.master, text="Next", command=self.step7)
+		self.btn_step6.pack(pady=pady)
 
-		self.update_widgets()
+		prev_button = tk.Button(self.master, text="Previous", command=self.step5)
+		prev_button.pack(pady=pady)
+
+		self.update_windows()
+
+	def step6_slab(self):
+
+		# set substrate sizes
+		self.lbl_step6 = tk.Label(self.master, text="Step 6: set substrate sizes")
+		self.lbl_step6.pack(pady=pady)
+
+		lbl_text = tk.Label(self.master, text="Please input the sizes of the substrate (unit in Angstrom)")
+		lbl_text.pack(pady=pady)
+
+		# three entry
+		lbl_slab_length = tk.Label(self.master, text="Length:")
+		self.ent_slab_length = tk.Entry(self.master, width=10)
+		self.ent_slab_length.pack(pady=pady)
+
+		lbl_slab_width = tk.Label(self.master, text="Width:")
+		self.ent_slab_width = tk.Entry(self.master, width=10)
+		self.ent_slab_width.pack(pady=pady)
+
+		lbl_slab_height = tk.Label(self.master, text="Height:")
+		self.ent_slab_height = tk.Entry(self.master, width=10)
+		self.ent_slab_height.pack(pady=pady)
+
+		self.btn_graft_type = tk.Button(self.master, text="OK", command=self.get_slab_values)
+		self.btn_graft_type.pack(pady=pady)
+
+		self.btn_step6 = tk.Button(self.master, text="Next", command=self.step7)
+		self.btn_step6.pack(pady=pady)
+
+	def step7(self):
+		# set grafting density
+		self.lbl_step6 = tk.Label(self.master, text="Step 7: set grafting density")
+		self.lbl_step6.pack(pady=pady)
+
+		lbl_text = tk.Label(self.master, text="Please input the grafting density (unit in 1/Angstrom2)")
+		lbl_text.pack(pady=pady)
+
+		# one entry
+		lbl_grafting_density = tk.Label(self.master, text="Grafting density:")
+		self.ent_grafting_density = tk.Entry(self.master, width=10)
+		self.ent_grafting_density.pack(pady=pady)
+
+		self.btn_graft_type = tk.Button(self.master, text="OK", command=self.get_grafting_density)
+		self.btn_graft_type.pack(pady=pady)
+
+		self.btn_step7 = tk.Button(self.master, text="Next", command=self.step8)
+		self.btn_step7.pack(pady=pady)
+
+		prev_button = tk.Button(self.master, text="Previous", command=self.step6)
+		prev_button.pack(pady=pady)
+
+		self.update_windows()
+
+	def step8(self):
+		# set output file name
+		self.lbl_step8 = tk.Label(self.master, text="Step 8: set output file name")
+		self.lbl_step8.pack(pady=pady)
+
+		lbl_text = tk.Label(self.master, text="Please input the output file name")
+		lbl_text.pack(pady=pady)
+
+		# one entry
+		self.ent_fname = tk.Entry(self.master, width=10)
+		self.ent_fname.pack(pady=pady)
+
+		self.btn_fname = tk.Button(self.master, text="OK", command=self.get_fname)
+		self.btn_fname.pack(pady=pady)
+
+		prev_button = tk.Button(self.master, text="Previous", command=self.step7)
+		prev_button.pack(pady=pady)
+
+		self.btn_step8 = tk.Button(self.master, text="Submit", command=self.call_polyGraft)
+		self.btn_step8.pack(pady=pady)
+
+		self.update_windows()
 
 	def prev_step(self):
 		self.current_step.set(self.current_step.get() - 1)
@@ -403,20 +432,34 @@ class polyGraftGUI:
 
 		self.next_button.config(state=tk.NORMAL)
 
-		self.update_widgets()
+		self.update_windows()
 
-	def run_process(self):
-		print("Executing the process...")
+	def call_polyGraft(self):
+		print("Generating the structure and topology ...")
 
-	def update_widgets(self):
+	def update_windows(self):
 		step = self.current_step.get()
-		self.label.config(text=f"Step {step}: {step_dict[step]}")
 
-		if step == 6:
-			self.run_button.config(state=tk.NORMAL)
-		else:
-			self.run_button.config(state=tk.DISABLED)
+		if step == 2:
+			self.lbl_step2.config(text="Step 2: select data format")
 
+		elif step == 3:
+			self.lbl_step3.config(text="Step 3: select grafts type")
+
+		elif step == 4:
+			self.lbl_step4.config(text="Step 4: import graft data file")
+
+		elif step == 5:
+			self.lbl_step5.config(text="Step 5: select substrate type")
+
+		elif step == 6:
+			self.lbl_step6.config(text="Step 6: set substrate sizes")
+
+		elif step == 7:
+			self.lbl_step7.config(text="Step 7: set grafting density")
+
+		elif step == 8:
+			self.lbl_step8.config(text="Step 8: set output file name")
 
 def main():
 	root = tk.Tk()
