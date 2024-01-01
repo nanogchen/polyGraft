@@ -1,106 +1,67 @@
 import tkinter as tk
 from tkinter import filedialog
 
-class SixStepGUI:
-    def __init__(self, master):
-        self.master = master
-        self.master.title("Six Step GUI")
-        self.master.geometry("800x600")  # Setting window size
+def next_step(step, next_step_widget):
+    # Hide current step
+    step.pack_forget()
+    # Show next step
+    next_step_widget.pack()
 
-        self.current_step = tk.IntVar()
-        self.current_step.set(1)
+def back_step(step, prev_step_widget):
+    # Hide current step
+    step.pack_forget()
+    # Show previous step
+    prev_step_widget.pack()
 
-        self.create_widgets()
+def browse_file():
+    filename = filedialog.askopenfilename(initialdir=".", title="Select a File")
+    file_entry.delete(0, tk.END)
+    file_entry.insert(0, filename)
 
-    def create_widgets(self):
-        self.label = tk.Label(self.master, text="Step 1")
-        self.label.pack(pady=10)
+root = tk.Tk()
+root.title("polyGraft GUI")
+root.geometry("400x600")  # Setting window size
 
-        self.file_path = tk.StringVar()
-        self.entry = tk.Entry(self.master, textvariable=self.file_path)
-        self.entry.pack(pady=5)
+# Step 1
+step1 = tk.Frame(root)
+label1 = tk.Label(step1, text="Step 1: Choose an option", width=40)
+label1.pack(padx=20, pady=20)
+choices = ["Option 1", "Option 2", "Option 3"]
+choice_var = tk.StringVar()
+choice_var.set(choices[0])
+option_menu = tk.OptionMenu(step1, choice_var, *choices)
+option_menu.pack()
+button1_next = tk.Button(step1, text="Next", command=lambda: next_step(step1, step2))
+button1_next.pack(anchor='e')
 
-        self.select_file_button = tk.Button(self.master, text="Select File", command=self.select_file)
-        self.select_file_button.pack()
+# Step 2
+step2 = tk.Frame(root)
+label2 = tk.Label(step2, text="Step 2: Select a file")
+label2.pack(padx=20, pady=20)
+file_entry = tk.Entry(step2, width=40)
+file_entry.pack()
+browse_button = tk.Button(step2, text="Browse", command=browse_file)
+browse_button.pack()
+button2_back = tk.Button(step2, text="Back", command=lambda: back_step(step2, step1))
+button2_back.pack(side=tk.LEFT)
+button2_next = tk.Button(step2, text="Next", command=lambda: next_step(step2, step3))
+button2_next.pack(side=tk.RIGHT)
 
-        self.options = ["Choice 1", "Choice 2"]
-        self.selection = tk.StringVar()
-        self.selection.set(self.options[0])
+# Step 3
+step3 = tk.Frame(root)
+label3 = tk.Label(step3, text="Step 3: Enter some input")
+label3.pack(padx=20, pady=20)
+input_label = tk.Label(step3, text="Enter text:")
+input_label.pack(anchor='w')
+input_entry = tk.Entry(step3, width=40)
+input_entry.pack()
+button3_back = tk.Button(step3, text="Back", command=lambda: back_step(step3, step2))
+button3_back.pack(anchor='w')
 
-        self.label_choice = tk.Label(self.master, text="Please select choice:")
-        self.label_choice.pack()
+button3_finish = tk.Button(step3, text="Submit", command=root.destroy)
+button3_finish.pack(padx=20, pady=20)
 
-        self.select_box = tk.OptionMenu(self.master, self.selection, *self.options, command=self.update_layout)
-        self.select_box.pack(pady=5)
+# Show initial step
+step1.pack()
 
-        self.next_button = tk.Button(self.master, text="Next", command=self.next_step)
-        self.next_button.pack(pady=5)
-
-        self.prev_button = tk.Button(self.master, text="Previous", command=self.prev_step, state=tk.DISABLED)
-        self.prev_button.pack(pady=5)
-
-        self.run_button = tk.Button(self.master, text="Run", command=self.run_process, state=tk.DISABLED)
-        self.run_button.pack(pady=5)
-
-    def update_widgets(self):
-        step = self.current_step.get()
-        self.label.config(text=f"Step {step}")
-
-        if step == 6:
-            self.run_button.config(state=tk.NORMAL)
-        else:
-            self.run_button.config(state=tk.DISABLED)
-
-    def select_file(self):
-        file_path = filedialog.askopenfilename()
-        self.file_path.set(file_path)
-
-    def update_layout(self, choice):
-        # Update the layout based on the selected choice
-        if choice == "Choice 1":
-            # For Choice 1 layout
-            pass  # Placeholder for updating the layout for Choice 1
-        elif choice == "Choice 2":
-            # For Choice 2 layout
-            pass  # Placeholder for updating the layout for Choice 2
-
-    def next_step(self):
-        user_input = self.entry.get()
-        selected_option = self.selection.get()
-        print(f"Step {self.current_step.get()} - User input: {user_input}, Selected: {selected_option}")
-
-        self.current_step.set(self.current_step.get() + 1)
-        step = self.current_step.get()
-
-        if step == 6:
-            self.next_button.config(state=tk.DISABLED)
-        else:
-            self.next_button.config(state=tk.NORMAL)
-
-        self.prev_button.config(state=tk.NORMAL)
-
-        self.update_widgets()
-
-    def prev_step(self):
-        self.current_step.set(self.current_step.get() - 1)
-        step = self.current_step.get()
-
-        if step == 1:
-            self.prev_button.config(state=tk.DISABLED)
-        else:
-            self.prev_button.config(state=tk.NORMAL)
-
-        self.next_button.config(state=tk.NORMAL)
-
-        self.update_widgets()
-
-    def run_process(self):
-        print("Executing the process...")
-
-def main():
-    root = tk.Tk()
-    app = SixStepGUI(root)
-    root.mainloop()
-
-if __name__ == "__main__":
-    main()
+root.mainloop()

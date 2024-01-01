@@ -18,7 +18,7 @@ import tkinter as tk
 from tkinter import filedialog
 import os,sys
 
-pady=5
+pady=2
 
 step_dict = {1: "select resolution",
 			 2: "select data format",
@@ -34,14 +34,14 @@ class polyGraftGUI:
 	def __init__(self, master):
 		self.master = master
 		self.master.title("polyGraft")
-		self.master.geometry("400x600")  # Setting window size
+		self.master.geometry("400x1000")  # Setting window size
 
 		self.current_step = tk.IntVar()
 		self.current_step.set(1)
 
 		# call the first step
 		# self.create_widgets()
-		self.step1()
+		self.step5()
 
 	def get_resolution(self):
 
@@ -358,21 +358,21 @@ class polyGraftGUI:
 		# three entry
 		lbl_slab_length = tk.Label(self.master, text="Length:")
 		self.ent_slab_length = tk.Entry(self.master, width=10)
-		self.ent_slab_length.pack(pady=pady)
+		lbl_slab_length.grid(row=0, column=0, sticky='e')
+		self.ent_slab_length.grid(row=0, column=1)
 
 		lbl_slab_width = tk.Label(self.master, text="Width:")
 		self.ent_slab_width = tk.Entry(self.master, width=10)
-		self.ent_slab_width.pack(pady=pady)
+		lbl_slab_width.grid(row=0, column=0, sticky='e')
+		self.ent_slab_width.grid(row=0, column=1)
 
 		lbl_slab_height = tk.Label(self.master, text="Height:")
 		self.ent_slab_height = tk.Entry(self.master, width=10)
-		self.ent_slab_height.pack(pady=pady)
+		lbl_slab_height.grid(row=0, column=0, sticky='e')
+		self.ent_slab_height.grid(row=0, column=1)
 
 		self.btn_graft_type = tk.Button(self.master, text="OK", command=self.get_slab_values)
 		self.btn_graft_type.pack(pady=pady)
-
-		self.btn_step6 = tk.Button(self.master, text="Next", command=self.step7)
-		self.btn_step6.pack(pady=pady)
 
 	def step7(self):
 		# set grafting density
