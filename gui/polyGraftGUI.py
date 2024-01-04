@@ -37,12 +37,12 @@ class polyGraftGUI:
 	def get_resolution(self):
 
 		self.model_resolution = self.resolution.get()
-		print(f"Step 1 selected value: {self.model_resolution}")
+		print(f"Step 2 selected value: {self.model_resolution}")
 
 	def get_format(self):
 
 		self.model_format = self.format.get()
-		print(f"Step 2 selected value: {self.model_format}")
+		print(f"Step 1 selected value: {self.model_format}")
 
 	def get_graft_type(self):
 
@@ -59,6 +59,20 @@ class polyGraftGUI:
 		self.slab_length = self.ent_slab_length.get()
 		self.slab_width = self.ent_slab_width.get()
 		self.slab_height = self.ent_slab_height.get()
+
+	def get_rod_values(self):
+
+		self.rod_length = self.ent_rod_length.get()
+		self.rod_radius = self.ent_rod_radius.get()
+
+	def get_pore_values(self):
+
+		self.pore_length = self.ent_pore_length.get()
+		self.pore_radius = self.ent_pore_radius.get()
+
+	def get_sphere_values(self):
+
+		self.sphere_radius = self.ent_sphere_radius.get()
 
 	def get_grafting_density(self):
 
@@ -397,7 +411,7 @@ class polyGraftGUI:
 		self.lbl_step6 = tk.Label(self.frm_step6, text="Step 6: set substrate sizes")
 		self.lbl_step6.pack(pady=pady)
 
-		lbl_text = tk.Label(self.frm_step6, text="Please input the sizes of the substrate")
+		lbl_text = tk.Label(self.frm_step6, text="Please input the sizes of the nanoslab")
 		lbl_text.pack(pady=pady)
 
 		# three entry
@@ -423,6 +437,88 @@ class polyGraftGUI:
 		frm_entry.pack()
 
 		self.btn_graft_type = tk.Button(self.frm_step6, text="OK", command=self.get_slab_values)
+		self.btn_graft_type.pack(pady=pady)
+
+	def step6_rod(self):		
+
+		# set substrate sizes
+		self.lbl_step6 = tk.Label(self.frm_step6, text="Step 6: set substrate sizes")
+		self.lbl_step6.pack(pady=pady)
+
+		lbl_text = tk.Label(self.frm_step6, text="Please input the sizes of the nanorod")
+		lbl_text.pack(pady=pady)
+
+		# two entry
+		frm_entry = tk.Frame(self.frm_step6)
+		frm_entry.rowconfigure([0, 1], minsize=2, weight=1)
+		frm_entry.columnconfigure([0, 1], minsize=2, weight=1)
+
+		lbl_rod_length = tk.Label(frm_entry, text="Length:")		
+		self.ent_rod_length = tk.Entry(frm_entry, width=10)
+		lbl_rod_length.grid(row=0, column=0, sticky="w", pady=pady)		
+		self.ent_rod_length.grid(row=0, column=1, sticky="e", pady=pady)
+
+		lbl_rod_radius = tk.Label(frm_entry, text="Radius:")
+		self.ent_rod_radius = tk.Entry(frm_entry, width=10)
+		lbl_rod_radius.grid(row=1, column=0, sticky="w", pady=pady)
+		self.ent_rod_radius.grid(row=1, column=1, sticky="e", pady=pady)
+
+		frm_entry.pack()
+
+		self.btn_graft_type = tk.Button(self.frm_step6, text="OK", command=self.get_rod_values)
+		self.btn_graft_type.pack(pady=pady)
+
+	def step6_pore(self):		
+
+		# set substrate sizes
+		self.lbl_step6 = tk.Label(self.frm_step6, text="Step 6: set substrate sizes")
+		self.lbl_step6.pack(pady=pady)
+
+		lbl_text = tk.Label(self.frm_step6, text="Please input the sizes of the nanopore")
+		lbl_text.pack(pady=pady)
+
+		# two entry
+		frm_entry = tk.Frame(self.frm_step6)
+		frm_entry.rowconfigure([0, 1], minsize=2, weight=1)
+		frm_entry.columnconfigure([0, 1], minsize=2, weight=1)
+
+		lbl_pore_length = tk.Label(frm_entry, text="Length:")		
+		self.ent_pore_length = tk.Entry(frm_entry, width=10)
+		lbl_pore_length.grid(row=0, column=0, sticky="w", pady=pady)		
+		self.ent_pore_length.grid(row=0, column=1, sticky="e", pady=pady)
+
+		lbl_pore_radius = tk.Label(frm_entry, text="Radius:")
+		self.ent_pore_radius = tk.Entry(frm_entry, width=10)
+		lbl_pore_radius.grid(row=1, column=0, sticky="w", pady=pady)
+		self.ent_pore_radius.grid(row=1, column=1, sticky="e", pady=pady)
+
+		frm_entry.pack()
+
+		self.btn_graft_type = tk.Button(self.frm_step6, text="OK", command=self.get_pore_values)
+		self.btn_graft_type.pack(pady=pady)
+
+	def step6_sphere(self):		
+
+		# set substrate sizes
+		self.lbl_step6 = tk.Label(self.frm_step6, text="Step 6: set substrate sizes")
+		self.lbl_step6.pack(pady=pady)
+
+		lbl_text = tk.Label(self.frm_step6, text="Please input the sizes of the nanosphere")
+		lbl_text.pack(pady=pady)
+
+		# two entry
+		frm_entry = tk.Frame(self.frm_step6)
+		frm_entry.rowconfigure(0, minsize=2, weight=1)
+		frm_entry.columnconfigure(0, minsize=2, weight=1)
+
+		lbl_sphere_radius = tk.Label(frm_entry, text="Radius:")
+		self.ent_sphere_radius = tk.Entry(frm_entry, width=10)
+		lbl_sphere_radius.grid(row=0, column=0, sticky="w", pady=pady)
+		self.ent_sphere_radius.grid(row=0, column=1, sticky="e", pady=pady)
+
+		frm_entry.pack()
+
+		self.btn_graft_type = tk.Button(self.frm_step6, text="OK", command=self.get_sphere_values)
 		self.btn_graft_type.pack(pady=pady)
 
 	def step7(self):
@@ -480,6 +576,7 @@ class polyGraftGUI:
 
 	def call_polyGraft(self):
 		print("Generating the structure and topology ...")
+		self.master.destroy()
 
 def main():
 	root = tk.Tk()
