@@ -13,11 +13,12 @@ if __name__ == '__main__':
 	linear = Polymer(poly_name="CG")
 
 	# read from file
-	linear.readDATA(f"linear_N6.data", atom_style="id resid type x y z")
+	chainLen = 12
+	linear.readDATA(f"linear_N{chainLen}.data", atom_style="id resid type x y z")
 
 	# read Au nanopore or by generation (the following two lines)
 	lattice = Atomsk(lattice_type='fcc', nearest_neighbor=1, element='Au')
-	radius = 10 # unit in lj (sigma)
+	radius = 5 # unit in lj (sigma)
 	depth = 8
 	lattice.gen_pore(radius, depth, outFile=f"Aupore.data")
 	nanopore = Crystal("nanopore", 'Au', radius, depth)
@@ -35,6 +36,6 @@ if __name__ == '__main__':
 	poly_g_pore.genGraftStruct()
 
 	# save data
-	poly_g_pore.toDATA(f"poly_g_pore_N6-sigma-{str(gft_density)}-R{radius}.data", with_charges=False)
+	poly_g_pore.toDATA(f"poly_g_pore_N{chainLen}-sigma-{str(gft_density)}-R{radius}.data", with_charges=False)
 
 	

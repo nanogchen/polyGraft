@@ -63,7 +63,7 @@ class polyGraft():
 		assert style in ['homo-bigraft','random-bigraft','janus-bigraft'], f"Currently only homo/random/janus type is allowed!"
 
 	def setGraftingDensity(self, graftingDensity):
-		if isinstance(self.center_, Crystal):
+		if isinstance(self.center_, Crystal) or isinstance(self.center_, cgCrystal.Crystal):
 			if graftingDensity > 0.06:
 				print(f"WARNING: Grafting density cannot be too large in real units (smaller than 0.06 A^-2). Ignore for LJ unit!")
 			self.graftingDensity_ = graftingDensity		
@@ -83,7 +83,7 @@ class polyGraft():
 
 	def setGftAtoms(self, atomname):
 		# set atoms of the substrate to be grafted
-		if isinstance(self.center_, Crystal):
+		if isinstance(self.center_, Crystal) or isinstance(self.center_, cgCrystal.Crystal):
 			self.graftAtoms_ = self.center_.crystal_.select_atoms(f'name {atomname}')
 
 			# the final structure poly-g-soft: initialized with the backbones
@@ -428,6 +428,12 @@ class polyGraft():
 				poly_pos = self.graft_bi_.polyGRO_.atoms.positions
 				ref_vect = self.graft_bi_.getEndVect()
 				i_graft = self.graft_bi_.polyGRO_.copy()
+
+			# polymer size larger than nanopore radius
+			if radius<np.linalg.norm(ref_vect)*2.0:
+				incline_angle = math.acos(radius/(2.0*np.linalg.norm(ref_vect)))
+				norm_vector[2] = math.tan(incline_angle)
+				norm_vector = norm_vector/np.linalg.norm(norm_vector)
 
 			RotMat,TransMat = getTransformationMat(ref_vect, norm_vector)
 			RotMat = np.transpose(RotMat)

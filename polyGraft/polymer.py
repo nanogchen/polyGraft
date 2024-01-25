@@ -133,7 +133,7 @@ class Polymer():
 		get the end-to-end vector of the chain from first and last index
 		"""
 		ref_vec = self.polyGRO_.atoms.positions[-1] - self.polyGRO_.atoms.positions[0]
-		ref_vec = ref_vec/np.linalg.norm(ref_vec)
+		# ref_vec = ref_vec/np.linalg.norm(ref_vec)
 		return ref_vec
 
 	def updatePos(self, pos):
