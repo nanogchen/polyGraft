@@ -21,6 +21,7 @@ Installation steps (tested with Anaconda):
 > conda env create -f environment.yml
 3. download atomsk and place under /path/to/polyGraft/bin
 4. download polyGraft through github
+> git clone https://github.com/nanogchen/polyGraft.git
 5. activate the polyGraft environment and use polyGraft for generation under /path/to/polyGraft/examples
 > conda activate polyGraft
 
