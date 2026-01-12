@@ -5,5 +5,7 @@ numpy==2.3.5
 pandas==2.3.3
 plotly==6.5.0
 scipy==1.16.3
+py3dmol==2.5.3
+ipywidgets==7.6.3
 ipython_genutils==0.2.0
 stmol==0.0.9
