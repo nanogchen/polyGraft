@@ -1,0 +1,3 @@
+build-essential
+python3-dev
+libx11-6
