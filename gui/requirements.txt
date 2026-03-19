@@ -1,6 +1,5 @@
 numpy
 pandas
-python
 stmol
 ipython_genutils
 MDAnalysis
