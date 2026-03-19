@@ -6,8 +6,10 @@ dependencies:
   - numpy
   - pandas
   - python
-  - streamlit
+  - stmol
   - ipython_genutils
-  - mdanalysis
+  - MDAnalysis
+  - streamlit
   - plotly
   - numba
+  - scipy
