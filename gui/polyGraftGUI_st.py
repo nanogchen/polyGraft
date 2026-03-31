@@ -3,264 +3,179 @@ from stmol import showmol
 import py3Dmol
 import io
 import zipfile
+from datetime import datetime
+import pandas as pd
 
 # --- App Styling ---
-st.set_page_config(page_title="Molecular Grafting Tool", layout="wide")
+st.set_page_config(page_title="PolyGraft Dashboard", layout="wide")
 
-# Initialize Session State
-if 'step' not in st.session_state:
-    st.session_state.step = 1
-if 'data' not in st.session_state:
-    st.session_state.data = {}
-if 'output_files' not in st.session_state:
-        st.session_state.output_files = None    
+# --- Initialize Session State ---
+if 'history' not in st.session_state:
+    st.session_state.history = []
+if 'output_ready' not in st.session_state:
+    st.session_state.output_ready = None
 
-# --- Navigation Logic ---
-def next_step(): st.session_state.step += 1
-def prev_step(): st.session_state.step -= 1
+# --- Helper: Global Reset ---
+def reset_all():
+    # Clears all session data to start fresh
+    for key in list(st.session_state.keys()):
+        del st.session_state[key]
+    st.rerun()
 
-# --- Molecule Viewer Function ---
+# --- Helper: Molecule Viewer ---
 def render_molecule(file_obj, file_format, label):
+    """Renders molecular files in 3D using py3Dmol."""
     if file_obj is not None:
-        st.caption(f"**Preview: {label}**")
-        string_data = file_obj.getvalue().decode("utf-8")
-        view = py3Dmol.view(width=400, height=400)
-        # .gro is standard; .data often needs conversion, 
-        # but 3Dmol tries its best with 'xyz' or 'pdb' logic
-        fmt = 'gro' if file_format == "GROMACS" else 'xyz' 
-        view.addModel(string_data, fmt)
-        view.setStyle({'stick': {}, 'sphere': {'radius': 0.5}})
-        view.zoomTo()
-        showmol(view, height=400, width=400)
+        st.write(f"🔍 **{label} Preview**")
+        try:
+            string_data = file_obj.getvalue().decode("utf-8")
+            view = py3Dmol.view(width=450, height=350)
+            # GROMACS uses 'gro'; LAMMPS data often maps best to 'xyz' for basic atom viewing
+            fmt_type = 'gro' if file_format == "GROMACS" else 'xyz' 
+            view.addModel(string_data, fmt_type)
+            view.setStyle({'stick': {'radius': 0.2}, 'sphere': {'radius': 0.4}})
+            view.zoomTo()
+            showmol(view, height=350, width=450)
+        except Exception as e:
+            st.error(f"Could not render {label}: {e}")
 
-# --- Sidebar Progress Tracker ---
-with st.sidebar:
-    st.title("Step Tracker")
-    steps_list = [
-        "1. Data Format", "2. Resolution", "3. Graft Type", 
-        "4. File Import", "5. Substrate Type", "6. Dimensions", 
-        "7. Grafting Density", "8. Generate"
-    ]
+# --- Header ---
+head_col1, head_col2 = st.columns([3, 1])
+with head_col1:
+    st.title("🧪 PolyGraft: Molecular Grafting Tool")
+with head_col2:
+    st.button("🔄 Reset All Parameters", width='stretch', on_click=reset_all)
+
+st.divider()
+
+# --- Main Layout ---
+col_left, col_right = st.columns([1, 1], gap="large")
+
+with col_left:
+    st.subheader("⚙️ Configuration Knobs")
     
-    for i, step_name in enumerate(steps_list, 1):
-        if st.session_state.step == i:
-            st.markdown(f"### **➡️ {step_name}**") 
-        elif st.session_state.step > i:
-            st.markdown(f"✅ {step_name}")
+    # 1. Basics
+    with st.expander("Step 1 & 2: Format & Resolution", expanded=True):
+        fmt = st.radio("Data Format:", ["GROMACS", "LAMMPS"], horizontal=True)
+        res = st.radio("Resolution:", ["Atomistic", "Coarse Grained"], horizontal=True)
+
+    # 2. Graft Logic
+    with st.expander("Step 3 & 4: Grafting & Files", expanded=True):
+        gtype = st.radio("Graft Type:", ["Unigraft", "Bigraft"], horizontal=True)
+        uploaded_files = {}
+        
+        if gtype == "Unigraft":
+            if fmt == "GROMACS":
+                uploaded_files['gro'] = st.file_uploader("Upload .gro", type=['gro'])
+                uploaded_files['itp'] = st.file_uploader("Upload .itp", type=['itp'])
+            else:
+                uploaded_files['data'] = st.file_uploader("Upload LAMMPS Data", type=['data', 'txt'])
         else:
-            st.markdown(f"⚪ {step_name}")
-            
-    st.divider()
-    st.subheader("Current Selection Summary")
-    for key, value in st.session_state.data.items():
-        # if key not in ['files', 'dimensions']:
-        if key not in ['files']:
-            st.caption(f"**{key.replace('_',' ').capitalize()}:** {value}")
+            tabA, tabB = st.tabs(["🧬 Graft A", "🧬 Graft B"])
+            with tabA:
+                if fmt == "GROMACS":
+                    uploaded_files['gro_a'] = st.file_uploader("Gro A", type=['gro'])
+                    uploaded_files['itp_a'] = st.file_uploader("Itp A", type=['itp'])
+                else:
+                    uploaded_files['data_a'] = st.file_uploader("Data A", type=['data', 'txt'])
+            with tabB:
+                if fmt == "GROMACS":
+                    uploaded_files['gro_b'] = st.file_uploader("Gro B", type=['gro'])
+                    uploaded_files['itp_b'] = st.file_uploader("Itp B", type=['itp'])
+                else:
+                    uploaded_files['data_b'] = st.file_uploader("Data B", type=['data', 'txt'])
 
-    if st.button("🔄 Reset All"):
-        st.session_state.step = 1
-        st.session_state.data = {}
-        st.rerun()
+    # 3. Substrate Logic
+    with st.expander("Step 5 & 6: Substrate Geometry", expanded=True):
+        substrate = st.selectbox("Substrate Type:", ["Slab", "Rod", "Pore", "Sphere"])
+        dims = {}
+        c1, c2, c3 = st.columns(3)
+        if substrate == "Slab":
+            dims['Lx'] = c1.number_input("Lx [nm]", 0.1, 100.0, 10.0)
+            dims['Ly'] = c2.number_input("Ly [nm]", 0.1, 100.0, 10.0)
+            dims['Lz'] = c3.number_input("Lz [nm]", 0.1, 100.0, 5.0)
+        elif substrate == "Rod":
+            dims['R'] = c1.number_input("Radius [nm]", 0.1, 50.0, 2.0)
+            dims['L'] = c2.number_input("Length [nm]", 0.1, 200.0, 20.0)
+        elif substrate == "Pore":
+            dims['R_in'] = c1.number_input("Inner R [nm]", 0.1, 50.0, 3.0)
+            dims['R_out'] = c2.number_input("Outer R [nm]", 0.1, 50.0, 5.0)
+            dims['L'] = c3.number_input("Length [nm]", 0.1, 100.0, 10.0)
+        else: # Sphere
+            dims['R'] = c1.number_input("Radius [nm]", 0.1, 50.0, 5.0)
 
-st.title("🧪 Molecular Grafting Configuration")
-
-# --- Step 1: Data Format ---
-if st.session_state.step == 1:
-    st.header("Step 1: Select Data Format")
-    st.session_state.data['format'] = st.radio("Choose Format:", ["GROMACS", "LAMMPS"])
-    st.button("Next ➡️", on_click=next_step)
-
-# --- Step 2: Resolution ---
-elif st.session_state.step == 2:
-    st.header("Step 2: Select Resolution")
-    is_gromacs = st.session_state.data.get('format') == "GROMACS"
-    
-    if is_gromacs:
-        st.info("💡 GROMACS selected: Only **Atomistic** resolution is supported.")
-        res_options = ["Atomistic"]
-    else:
-        res_options = ["Atomistic", "Coarse Grained"]
-
-    st.session_state.data['resolution'] = st.radio("Choose Resolution:", res_options)
-    col1, col2 = st.columns(2)
-    with col1: st.button("⬅️ Back", on_click=prev_step)
-    with col2: st.button("Next ➡️", on_click=next_step)
-
-# --- Step 3: Graft Type ---
-elif st.session_state.step == 3:
-    st.header("Step 3: Select Graft Type")
-    st.session_state.data['graft_type'] = st.radio("Choose Type:", ["Unigraft", "Bigraft"])
-    col1, col2 = st.columns(2)
-    with col1: st.button("⬅️ Back", on_click=prev_step)
-    with col2: st.button("Next ➡️", on_click=next_step)
-
-# --- Step 4: Refined File Import (Conditional Logic) ---
-elif st.session_state.step == 4:
-    fmt = st.session_state.data.get('format')
-    gtype = st.session_state.data.get('graft_type')
-    st.header(f"Step 4: Import {fmt} Files ({gtype})")
-    
-    files = {}    
-    ready = False
-    if gtype == "Unigraft":
-        c1, c2 = st.columns([1, 1])
-        with c1:
-            if fmt == "GROMACS":
-                files['gro'] = st.file_uploader("Upload .gro", type=['gro'])
-                files['itp'] = st.file_uploader("Upload .itp", type=['itp'])
-                ready = all([files['gro'], files['itp']])
-            else:
-                files['data'] = st.file_uploader("Upload LAMMPS data", type=['data'])
-                ready = files['data'] is not None
-        with c2:
-            f_to_show = files.get('gro') or files.get('data')
-            if f_to_show: render_molecule(f_to_show, fmt, "Single Graft")
-
-    else: # Bigraft 
-        input_col, view = st.columns([1, 1])
-        with input_col:
-            if fmt == "GROMACS":
-                st.subheader("Graft A")
-                files['gro_a'] = st.file_uploader("gro A", type=['gro'])
-                files['itp_a'] = st.file_uploader("itp A", type=['itp'])
-                st.divider()
-                st.subheader("Graft B")
-                files['gro_b'] = st.file_uploader("gro B", type=['gro'])
-                files['itp_b'] = st.file_uploader("itp B", type=['itp'])
-                ready = all([files['gro_a'], files['itp_a'], files['gro_b'], files['itp_b']])
-            else:
-                st.subheader("Graft A")
-                files['data_a'] = st.file_uploader("data A", type=['data'])
-                st.divider()
-                st.subheader("Graft B")
-                files['data_b'] = st.file_uploader("data B", type=['data'])
-                ready = all([files['data_a'], files['data_b']])
+    # 4. Density & Run
+    with st.expander("Step 7 & 8: Density & Output", expanded=True):
+        density = st.slider("Grafting Density (chains/nm²):", 0.01, 5.0, 0.5)
+        out_name = st.text_input("Output Filename:", "grafted_system")
         
-        with view:
-            f_a = files.get('gro_a') or files.get('data_a')
-            if f_a: render_molecule(f_a, fmt, "Graft A")
-            f_b = files.get('gro_b') or files.get('data_b')
-            if f_b: render_molecule(f_b, fmt, "Graft B")
-
-    st.session_state.data['files'] = files
-    col1, col2 = st.columns(2)
-    with col1: st.button("⬅️ Back", on_click=prev_step)
-    with col2: 
-        if ready: st.button("Next ➡️", on_click=next_step)
-        else: st.warning("Please upload all required files to proceed.")
-
-# --- Step 5: Substrate Type ---
-elif st.session_state.step == 5:
-    st.header("Step 5: Select Substrate Type")
-    st.session_state.data['substrate'] = st.selectbox("Choose Substrate:", ["Slab", "Rod", "Pore", "Sphere"])
-    col1, col2 = st.columns(2)
-    with col1: st.button("⬅️ Back", on_click=prev_step)
-    with col2: st.button("Next ➡️", on_click=next_step)
-
-# --- Step 6: Substrate Dimensions ---
-elif st.session_state.step == 6:
-    st.header(f"Step 6: Dimensions for {st.session_state.data['substrate']}")
-    sub = st.session_state.data['substrate']
-    dims = {}
-    # if sub == "Slab":
-    #     col_x, col_y, col_z = st.columns(3)
-    #     dims['L_x'] = col_x.number_input("Length (x) [nm]", min_value=1.0, value=10.0)
-    #     dims['L_y'] = col_y.number_input("Width (y) [nm]", min_value=1.0, value=10.0)
-    #     dims['L_z'] = col_z.number_input("Height (z) [nm]", min_value=1.0, value=5.0)
-        
-    # elif sub == "Rod":
-    #     col_r, col_l = st.columns(2)
-    #     dims['radius'] = col_r.number_input("Radius [nm]", min_value=1.0, value=2.0)
-    #     dims['length'] = col_l.number_input("Length [nm]", min_value=1.0, value=10.0)
-        
-    # elif sub == "Pore":
-    #     col_ir, col_or, col_l = st.columns(3)
-    #     dims['inner_radius'] = col_ir.number_input("Inner Radius [nm]", min_value=1.0, value=3.0)
-    #     dims['outer_radius'] = col_or.number_input("Outer Radius [nm]", min_value=4.0, value=6.0)
-    #     dims['length'] = col_l.number_input("Length [nm]", min_value=1.0, value=15.0)
-        
-    # elif sub == "Sphere":
-    #     dims['radius'] = st.number_input("Radius [nm]", min_value=1.0, value=5.0)    
-    if sub == "Slab":
-        dims['L_x'] = st.number_input("Length [nm]", min_value=1.0, value=5.0)
-        dims['L_y'] = st.number_input("Width [nm]", min_value=1.0, value=5.0)
-        dims['L_z'] = st.number_input("Height [nm]", min_value=1.0, value=5.0)
-    elif sub == "Rod":
-        dims['radius'] = st.number_input("Radius [nm]", min_value=1.0)
-        dims['length'] = st.number_input("Length [nm]", min_value=1.0)
-    elif sub == "Pore":
-        dims['inner_R'] = st.number_input("Inner Radius [nm]", min_value=1.0)
-        dims['outer_R'] = st.number_input("Outer Radius [nm]", min_value=1.0)
-        dims['length'] = st.number_input("Length [nm]", min_value=1.0)
-    elif sub == "Sphere":
-        dims['radius'] = st.number_input("Radius [nm]", min_value=1.0)
-
-    st.session_state.data['dimensions'] = dims
-    col1, col2 = st.columns(2)
-    with col1: st.button("⬅️ Back", on_click=prev_step)
-    with col2: st.button("Next ➡️", on_click=next_step)
-
-# --- Step 7: Grafting Density ---
-elif st.session_state.step == 7:
-    st.header("Step 7: Set Grafting Density")
-    # st.session_state.data['density'] = st.slider("Density (chains/nm²)", 0.01, 5.0, 0.5)
-    sigma = {}
-    sigma['sigma'] = st.number_input("Density (chains/nm²)", min_value=0.05)
-    st.session_state.data['grafting_density'] = sigma
-    col1, col2 = st.columns(2)
-    with col1: st.button("⬅️ Back", on_click=prev_step)
-    with col2: st.button("Next ➡️", on_click=next_step)
-
-# --- Step 8: Finalize ---
-elif st.session_state.step == 8:
-    st.header("Step 8: Generate")
-    out_name = st.text_input("Project Name (for filenames)", "my_molecular_system")
-    
-    # We use a dictionary to store multiple generated files    
-
-    if st.button("🚀 Run Backend Generation"):
-        with st.spinner("Grafting molecules and preparing files..."):
-            
-            # --- BACKEND MOCKUP START ---
-            # Replace these with your actual backend function outputs
-            if st.session_state.data['format'] == "GROMACS":
-                # Simulated file content
-                gro_content = f"GROMACS Generated File\nName: {out_name}\n"
-                itp_content = f"GROMACS Topology File\nName: {out_name}\n"
-                
-                # Create a ZIP in memory
-                zip_buffer = io.BytesIO()
-                with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
-                    zip_file.writestr(f"{out_name}.gro", gro_content)
-                    zip_file.writestr(f"{out_name}.itp", itp_content)
-                
-                st.session_state.output_files = {
-                    "data": zip_buffer.getvalue(),
-                    "extension": "zip",
-                    "mime": "application/zip",
-                    "label": "💾 Download GROMACS Files (.zip)"
-                }
-                
-            else: # LAMMPS
-                data_content = f"LAMMPS Data File\nName: {out_name}\n"
-                st.session_state.output_files = {
-                    "data": data_content,
-                    "extension": "data",
-                    "mime": "text/plain",
-                    "label": "💾 Download LAMMPS File (.data)"
-                }
-            # --- BACKEND MOCKUP END ---
-            
-            st.success("Generation Complete!")
-
-    # Display the download button if files are ready
-    if st.session_state.output_files:
         st.divider()
-        st.download_button(
-            label=st.session_state.output_files['label'],
-            data=st.session_state.output_files['data'],
-            file_name=f"{out_name}.{st.session_state.output_files['extension']}",
-            mime=st.session_state.output_files['mime']
-        )
-    
-    st.button("⬅️ Back", on_click=prev_step)
+        if st.button("🚀 GENERATE SYSTEM", width='stretch', type="primary"):
+            # --- START BACKEND INTEGRATION ---
+            # Replace the lines below with: result = your_main_function(fmt, res, gtype, uploaded_files, dims, density)
+            
+            st.session_state.history.append({
+                "Time": datetime.now().strftime("%H:%M:%S"),
+                "Project": out_name,
+                "Format": fmt,
+                "Res": res,
+                "Substrate": substrate
+            })
+            
+            # Simulated generated content
+            st.session_state.output_ready = {
+                "name": out_name, 
+                "fmt": fmt,
+                "content_gro": b"Simulated GROMACS .gro file content",
+                "content_itp": b"Simulated GROMACS .itp file content",
+                "content_lammps": b"Simulated LAMMPS .data file content"
+            }
+            # --- END BACKEND INTEGRATION ---
+            st.success(f"System generated successfully!")
+
+with col_right:
+    st.subheader("🖼️ Molecular Preview")
+    # This section reacts live to uploads in the left column
+    if gtype == "Unigraft":
+        f_main = uploaded_files.get('gro') or uploaded_files.get('data')
+        if f_main: render_molecule(f_main, fmt, "Primary Graft")
+        else: st.info("Upload structure file to preview.")
+    else:
+        f_a = uploaded_files.get('gro_a') or uploaded_files.get('data_a')
+        f_b = uploaded_files.get('gro_b') or uploaded_files.get('data_b')
+        if f_a: render_molecule(f_a, fmt, "Graft A")
+        if f_b: 
+            st.divider()
+            render_molecule(f_b, fmt, "Graft B")
+        if not f_a and not f_b: st.info("Upload A/B structure files to preview.")
+
+# --- Download Area ---
+if st.session_state.output_ready:
+    st.divider()
+    d_col1, d_col2 = st.columns([1, 1])
+    with d_col1:
+        out = st.session_state.output_ready
+        if out['fmt'] == "GROMACS":
+            zip_buf = io.BytesIO()
+            with zipfile.ZipFile(zip_buf, "w") as z:
+                z.writestr(f"{out['name']}.gro", out['content_gro'])
+                z.writestr(f"{out['name']}.itp", out['content_itp'])
+            st.download_button(
+                "💾 DOWNLOAD ZIP (GRO/ITP)", 
+                zip_buf.getvalue(), 
+                f"{out['name']}.zip", 
+                width='stretch'
+            )
+        else:
+            st.download_button(
+                "💾 DOWNLOAD DATA FILE", 
+                out['content_lammps'], 
+                f"{out['name']}.data", 
+                width='stretch'
+            )
+
+# --- History Log ---
+st.divider()
+st.subheader("📜 Session History")
+if st.session_state.history:
+    st.dataframe(pd.DataFrame(st.session_state.history), width='stretch')
