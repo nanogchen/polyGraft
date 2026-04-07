@@ -33,10 +33,7 @@ Installation steps (tested with Anaconda):
 3. Chen, Guang, and Elena Dormidontova. "PEO-Grafted Gold Nanopore: Grafting Density, Chain Length, and Curvature Effects." Macromolecules 55.12 (2022): 5222-5232. https://doi.org/10.1021/acs.macromol.2c00323
 
 # How to use
-Representative examples are given in the **examples*** directories, specifically
-- *lmp: for lammps format
-- *bi: for binary grafts used for grafting procedure
-- *cg: coarse-grained data (bead-spring model)
+Representative examples are given in the **examples*** directories.
 
 For any nanostructure generation, it takes two steps generally:
 1. generate or import the substrate material (hard or soft), and polymer (gro and itp or data files);
