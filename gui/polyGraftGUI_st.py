@@ -113,6 +113,81 @@ def render_lammps_preview(file_obj, atom_style_str):
         # Debugging: show the first 20 lines so you can see why it failed
         with st.expander("View File Header (Debug)"):
             st.code("\n".join(lines[:30]))
+
+def get_file_content(file_input):
+    """Safely extracts content from UploadedFile or local file buffer."""
+    if file_input is None:
+        return None
+    if hasattr(file_input, "getvalue"):
+        return file_input.getvalue().decode("utf-8")
+    if hasattr(file_input, "read"):
+        data = file_input.read()
+        return data.decode("utf-8") if isinstance(data, bytes) else data
+    return None
+
+def render_substrate(file_input, filename, atom_style_str="id type x y z"):
+    """
+    Renders substrate based on file extension (PDB, GRO, or LAMMPS).
+    """
+    content = get_file_content(file_input)
+    if not content:
+        st.warning("No content found for substrate.")
+        return
+
+    ext = filename.split('.')[-1].lower()
+    
+    view = py3Dmol.view(width=500, height=400)
+
+    if ext in ['pdb', 'gro']:
+        # Use py3Dmol's native parser for PDB and GRO
+        view.addModel(content, ext)
+        # Style: CPK colors for standard elements
+        view.setStyle({'sphere': {'colorscheme': 'Jmol', 'radius': 0.7}})
+        st.caption(f"Rendering {ext.upper()} Substrate")
+    
+    elif ext in ['data', 'lammps', 'txt']:
+        # Fallback to our custom LAMMPS parser for .data files
+        xyz_string = parse_lammps_to_xyz(content, atom_style_str)
+        if xyz_string:
+            view.addModel(xyz_string, 'xyz')
+            view.setStyle({'sphere': {'colorscheme': 'Jmol', 'radius': 0.7}})
+            st.caption("Rendering LAMMPS Substrate")
+        else:
+            st.error("Could not parse LAMMPS data.")
+            return
+    else:
+        st.error(f"Unsupported format: {ext}")
+        return
+
+    view.zoomTo()
+    showmol(view, height=400, width=500)
+
+def parse_lammps_to_xyz(content, atom_style_str):
+    """Helper to convert LAMMPS 'Atoms' section to XYZ format."""
+    cols = atom_style_str.split()
+    try:
+        ix, iy, iz, it = cols.index('x'), cols.index('y'), cols.index('z'), cols.index('type')
+    except ValueError:
+        return None
+
+    lines = content.splitlines()
+    xyz_atoms = []
+    reading = False
+    for line in lines:
+        line = line.strip().split('#')[0]
+        if "Atoms" in line:
+            reading = True; continue
+        if reading and any(k in line for k in ["Bonds", "Velocities", "Angles"]):
+            reading = False; break
+        if reading:
+            p = line.split()
+            if len(p) >= len(cols) and p[0].isdigit():
+                elems = ["H", "He", "Li", "Be", "B", "C", "N", "O", "F", "Ne"]
+                e = elems[int(p[it]) % len(elems)]
+                xyz_atoms.append(f"{e} {p[ix]} {p[iy]} {p[iz]}")
+    
+    if not xyz_atoms: return None
+    return f"{len(xyz_atoms)}\nConverted\n" + "\n".join(xyz_atoms)
     
 # --- App Styling ---
 st.set_page_config(page_title="PolyGraft Dashboard", layout="wide")
@@ -136,12 +211,24 @@ st.divider()
 col_left, col_right = st.columns([1, 1], gap="large")
 
 with col_left:
-    st.subheader("⚙️ Configuration Knobs")
+    st.subheader("⚙️ Configuration inputs")
     
     # 1. Basics
     with st.expander("Step 1 & 2: Format & Resolution", expanded=True):
         fmt = st.radio("Data Format:", ["GROMACS", "LAMMPS"], horizontal=True)
         res = st.radio("Resolution:", ["Atomistic", "Coarse Grained"], horizontal=True)
+
+        if res == "Coarse Grained":
+            # st.markdown("---")
+            units = "Å" # Default for Atomistic            
+            units = st.radio(
+                "Select CG Units:",
+                ["Å (Real)", "LJ (Reduced)"],horizontal=True,
+                help="Choose between real units (Angstroms) or Lennard-Jones reduced units.",
+                key="cg_unit_radio"
+            )
+            # Clean the string for backend processing
+            units = "Å" if "Å" in units else "LJ"
 
     # 2. Graft Logic
     with st.expander("Step 3 & 4: Grafting & Files", expanded=True):
@@ -188,65 +275,83 @@ with col_left:
                     )
                     uploaded_files['data_b'] = st.file_uploader("Data B", type=['data', 'txt'])
 
+            # bigrafting type
+            bi_gft_fmt = st.radio("bi-Grafting mode:", ["homogeneous", "random", "Janus"], horizontal=True)
+
     # 3. Substrate Logic
     with st.expander("Step 5 & 6: Substrate Geometry", expanded=True):
         substrate = st.selectbox("Substrate Type:", ["Slab", "Rod", "Pore", "Sphere"])
         # NEW: Lattice Configuration Knobs
         # st.markdown("---")
+        dims = {}
+        c1, c2, c3 = st.columns(3)
+        if substrate == "Slab":
+            dims['Lx'] = c1.number_input("Lx [Å]", 0.1, 100.0, 50.0)
+            dims['Ly'] = c2.number_input("Ly [Å]", 0.1, 100.0, 50.0)
+            dims['Lz'] = c3.number_input("Lz [Å]", 0.1, 100.0, 10.0)
+        elif substrate == "Rod":
+            dims['R'] = c1.number_input("Radius [Å]", 0.1, 50.0, 20.0)
+            dims['L'] = c2.number_input("Length [Å]", 0.1, 200.0, 20.0)
+        elif substrate == "Pore":
+            dims['R_in'] = c1.number_input("Inner R [Å]", 0.1, 50.0, 10.0)
+            # dims['R_out'] = c2.number_input("Outer R [Å]", 0.1, 50.0, 50.0)
+            dims['L'] = c2.number_input("Length [Å]", 0.1, 100.0, 10.0)
+        else: # Sphere
+            dims['R'] = c1.number_input("Radius [Å]", 0.1, 50.0, 20.0)
+
+        st.caption("⚛️ Lattice Parameters")
+        col_lat1, col_lat2 = st.columns(2)
+        with col_lat1:
+            lattice_type = st.text_input(
+                "Lattice Type", 
+                value="fcc", 
+                key="input_lattice_type"
+            )
+        with col_lat2:
+            lattice_const = st.number_input(
+                "Lattice Constant [Å]", 
+                value=4.08, 
+                format="%.2f", 
+                key="input_lattice_const"
+            )
 
         # Create Tabs for Uploading vs Generating
-        tab_upload, tab_generate = st.tabs(["📤 Upload Substrate Files", "🏗️ Generate Substrate"])
-
-        with tab_upload:
-            pass
+        tab_generate,tab_upload = st.tabs(["🏗️ Generate Substrate","📤 Upload Substrate Files"])
 
         with tab_generate:
-            st.info("Set parameters below, then press generate.")
-
-            st.caption("⚛️ Lattice Parameters")
-            col_lat1, col_lat2 = st.columns(2)
-            with col_lat1:
-                lattice_type = st.text_input(
-                    "Lattice Type", 
-                    value="fcc", 
-                    key="input_lattice_type"
-                )
-            with col_lat2:
-                lattice_const = st.number_input(
-                    "Lattice Constant [Å]", 
-                    value=4.08, 
-                    format="%.2f", 
-                    key="input_lattice_const"
-                )
-
-            dims = {}
-            c1, c2, c3 = st.columns(3)
-            if substrate == "Slab":
-                dims['Lx'] = c1.number_input("Lx [Å]", 0.1, 100.0, 50.0)
-                dims['Ly'] = c2.number_input("Ly [Å]", 0.1, 100.0, 50.0)
-                dims['Lz'] = c3.number_input("Lz [Å]", 0.1, 100.0, 10.0)                
-
-            elif substrate == "Rod":
-                dims['R'] = c1.number_input("Radius [Å]", 0.1, 50.0, 20.0)
-                dims['L'] = c2.number_input("Length [Å]", 0.1, 200.0, 20.0)
-            elif substrate == "Pore":
-                dims['R_in'] = c1.number_input("Inner R [Å]", 0.1, 50.0, 10.0)
-                dims['R_out'] = c2.number_input("Outer R [Å]", 0.1, 50.0, 50.0)
-                dims['L'] = c3.number_input("Length [Å]", 0.1, 100.0, 10.0)
-            else: # Sphere
-                dims['R'] = c1.number_input("Radius [Å]", 0.1, 50.0, 10.0)
+            st.info("Will generate the substrate, press generate.")                        
 
             if st.button("🏗️ Generate Substrate Now", use_container_width=True, key="btn_gen_sub"):
                 with st.spinner(f"Generating {lattice_type} {substrate}..."):
                     try:
-                        # --- CALL BACKEND SUBSTRATE GENERATOR ---
-                        if substrate == "Slab":
-                            lattice = Atomsk(lattice_type=lattice_type, 
+                        lattice = Atomsk(lattice_type=lattice_type, 
                                             lattice_const=lattice_const, 
                                             element='Au')
-                            lattice.gen_slab(dims['Lx'],dims['Ly'],dims['Lz'],outFile="Auslab.pdb")
+
+                        # --- CALL BACKEND SUBSTRATE GENERATOR ---
+                        if substrate == "Slab":
+                            ofile="Auslab.pdb"
+                            lattice.gen_slab(dims['Lx'],dims['Ly'],dims['Lz'],outFile=ofile)
                             nanoslab = Crystal("nanoslab", 'Au', dims['Lx'],dims['Ly'],dims['Lz'])
-                            nanoslab.readPDB("Auslab.pdb", guessing_bond=True, lattice_const=lattice_const)  
+                            nanoslab.readPDB(ofile, guessing_bond=True, lattice_const=lattice_const)
+
+                        elif substrate == "Rod":
+                            ofile="Aurod.pdb"
+                            lattice.gen_rod(dims['R'], dims['L'], outFile=ofile)
+                            nanorod = Crystal("nanorod", 'Au', dims['R'], dims['L'])
+                            nanorod.readPDB(ofile, guessing_bond=True, lattice_const=lattice_const)
+
+                        elif substrate == "Pore":
+                            ofile="Aupore.pdb"
+                            lattice.gen_pore(dims['R_in'], dims['L'], outFile=ofile)
+                            nanopore = Crystal("nanopore", 'Au', dims['R_in'], dims['L'])
+                            nanopore.readPDB(ofile, guessing_bond=True, lattice_const=lattice_const)
+
+                        else:
+                            ofile="AuNP.pdb"
+                            lattice.gen_particle(dims['R'], outFile=ofile)
+                            nanoparticle = Crystal("nanoparticle", 'Au', dims['R'])
+                            nanoparticle.readPDB(ofile, guessing_bond=True, lattice_const=lattice_const)
                         
                         # For demo, we simulate a successful generation
                         st.session_state['generated_sub_ready'] = True
@@ -256,6 +361,52 @@ with col_left:
                         # or display a specialized preview here.
                     except Exception as e:
                         st.error(f"Generation failed: {e}")
+
+                    #save the path
+                    st.session_state['last_gen_sub_path'] = ofile
+
+        with tab_upload:
+            uploaded_files['substrate'] = st.file_uploader("Upload substrate .gro/.pdb", type=['gro','pdb'])
+
+            if st.button("🏗️ Upload Substrate Now", use_container_width=True, key="btn_upload_sub"):
+                with st.spinner(f"Generating {lattice_type} {substrate}..."):
+                    try:
+
+                        if uploaded_files is not None:
+                            with tempfile.NamedTemporaryFile(delete=False, suffix=f"_{uploaded_files['substrate'].name}") as tmp:
+                                tmp.write(uploaded_files['substrate'].getvalue())
+                                tmp_path = tmp.name  # This is the string filename the backend wants
+
+                            # --- CALL BACKEND SUBSTRATE GENERATOR ---
+                            if substrate == "Slab":                            
+                                # lattice.gen_slab(dims['Lx'],dims['Ly'],dims['Lz'],outFile="Auslab.pdb")
+                                nanoslab = Crystal("nanoslab", 'Au', dims['Lx'],dims['Ly'],dims['Lz'])
+                                nanoslab.readPDB(tmp_path, guessing_bond=True, lattice_const=lattice_const)
+
+                            elif substrate == "Rod":
+                                # lattice.gen_rod(dims['R'], dims['L'], outFile="Aurod.pdb")
+                                nanorod = Crystal("nanorod", 'Au', dims['R'], dims['L'])
+                                nanorod.readPDB(tmp_path, guessing_bond=True, lattice_const=lattice_const)
+
+                            elif substrate == "Pore":
+                                # lattice.gen_pore(dims['R_in'], dims['L'], outFile="Aupore.pdb")
+                                nanopore = Crystal("nanopore", 'Au', dims['R_in'], dims['L'])
+                                nanopore.readPDB(tmp_path, guessing_bond=True, lattice_const=lattice_const)
+
+                            else:
+                                # lattice.gen_particle(dims['R'], outFile="AuNP.pdb")
+                                nanoparticle = Crystal("nanoparticle", 'Au', dims['R'])
+                                nanoparticle.readPDB(tmp_path, guessing_bond=True, lattice_const=lattice_const)
+                            
+                            # For demo, we simulate a successful generation
+                            # st.session_state['generated_sub_ready'] = True
+                            st.success(f"Successfully loaded {substrate} ({lattice_type})!")
+
+                    except Exception as e:
+                        st.error(f"Generation failed: {e}")
+            
+                    #save the path
+                    st.session_state['last_gen_sub_path'] = tmp_path
 
     # 4. Density & Run
     with st.expander("Step 7 & 8: Density & Output", expanded=True):
@@ -327,27 +478,61 @@ with col_left:
                         
                     except Exception as e:
                         st.error(f"Backend Error: {str(e)}")
+
+                    st.session_state['final_assembly_path'] = final_path
             
 with col_right:
     st.subheader("🖼️ Molecular Preview")
-    # This section reacts live to uploads in the left column
-    if gtype == "Unigraft":
-        f_main = uploaded_files.get('gro') or uploaded_files.get('data')
-        if f_main: 
-            if fmt == "GROMACS": render_molecule(f_main, fmt, "Primary Graft")
-            else: render_lammps_preview(f_main, atom_style)
-    else:
-        f_a = uploaded_files.get('gro_a') or uploaded_files.get('data_a')
-        f_b = uploaded_files.get('gro_b') or uploaded_files.get('data_b')
-        if f_a: 
-            if fmt == "GROMACS": render_molecule(f_a, fmt, "Graft A")
-            else: render_lammps_preview(f_a, atom_style)
-        if f_b: 
-            st.divider()
-            if fmt == "GROMACS": render_molecule(f_b, fmt, "Graft B")
-            else: render_lammps_preview(f_b, atom_style)
+    with st.expander("🧬 Graft Visualization", expanded=True):
+        # This section reacts live to uploads in the left column
+        if gtype == "Unigraft":
+            f_main = uploaded_files.get('gro') or uploaded_files.get('data')
+            if f_main: 
+                if fmt == "GROMACS": render_molecule(f_main, fmt, "Primary Graft")
+                else: render_lammps_preview(f_main, atom_style)
+        else:
+            f_a = uploaded_files.get('gro_a') or uploaded_files.get('data_a')
+            f_b = uploaded_files.get('gro_b') or uploaded_files.get('data_b')
+            if f_a: 
+                if fmt == "GROMACS": render_molecule(f_a, fmt, "Graft A")
+                else: render_lammps_preview(f_a, atom_style)
+            if f_b: 
+                st.divider()
+                if fmt == "GROMACS": render_molecule(f_b, fmt, "Graft B")
+                else: render_lammps_preview(f_b, atom_style)
 
-        if not f_a and not f_b: st.info("Upload A/B structure files to preview.")
+            if not f_a and not f_b: st.info("Upload A/B structure files to preview.")
+
+    # 2. Substrate Preview Section
+    st.divider()
+    with st.expander("🧱 Substrate Visualization", expanded=True):
+        # Priority 1: Check for a freshly generated backend file
+        gen_path = st.session_state.get('last_gen_sub_path')
+        
+        # Priority 2: Check for an uploaded substrate file
+        uploaded_sub = uploaded_files.get('substrate')
+
+        if gen_path and os.path.exists(gen_path):
+            fname = os.path.basename(gen_path)
+            with open(gen_path, 'rb') as f:
+                render_substrate(f, fname, atom_style)
+                
+        elif uploaded_sub:
+            # Streamlit UploadedFile has a .name attribute
+            render_substrate(uploaded_sub, uploaded_sub.name, atom_style)
+        else:
+            st.info("No substrate generated/loaded.")
+
+    # 3. poly-substrate Preview Section
+    st.divider()
+    with st.expander("🚀 Assembled System Visualization", expanded=True):
+        pg_path = st.session_state.get('final_assembly_path')
+
+        if pg_path:
+            pass
+
+        else:
+            st.info("Not yet generated!")
 
 # --- Download Area ---
 if st.session_state.output_ready:

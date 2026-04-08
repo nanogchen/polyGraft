@@ -17,7 +17,7 @@
 import random
 import math
 import sys
-sys.path.insert(0, "../examples/examples_gmx/")
+# sys.path.insert(0, "../examples/examples_gmx/")
 from rtp_define import gen_BBP_rtp, res_rtp_dict
 import numpy as np
 import MDAnalysis as mda

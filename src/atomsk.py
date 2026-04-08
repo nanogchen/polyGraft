@@ -15,9 +15,25 @@
 #
 
 import MDAnalysis as mda
-import os
-import sys
-sys.path.insert(0, '../bin/')
+import os,sys
+# 1. Get the absolute path to the directory containing 'src' and 'gui'
+# This assumes your structure is: project_root/gui/app.py and project_root/src/polyGraft.py
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(current_dir, ".."))
+
+# 2. Add project root to sys.path so 'src' is findable
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
+# 3. Add 'src' itself to sys.path so polyGraft.py can find rtp_define.py
+src_path = os.path.join(project_root, "src")
+if src_path not in sys.path:
+    sys.path.insert(0, src_path)
+
+# 4. Add 'bin' itself to sys.path
+bin_path = os.path.join(project_root, "bin")
+if bin_path not in sys.path:
+    sys.path.insert(0, bin_path)
 
 class Atomsk:
 
@@ -34,7 +50,8 @@ class Atomsk:
 
 		# print information
 		print(f"Please know that length unit in Atomsk is in Angstrom!")
-		assert os.path.exists("../bin/atomsk"), f"The atomsk program should be placed under /path/to/polyGraft/bin/ to generate atomic lattice crystals"
+		assert os.path.exists(os.path.join(bin_path, "atomsk")), f"The atomsk program should be placed under /path/to/polyGraft/bin/ to generate atomic lattice crystals"
+		self.atomsk = os.path.join(bin_path, "atomsk")
 
 	def xsf2pdb(self, infname):
 		# check if the file already exists
@@ -42,7 +59,7 @@ class Atomsk:
 		self.clean_files([pdbfile])
 
 		# convert xsf to pdb
-		os.system(f"atomsk {infname} pdb >> gen.log")
+		os.system(f"{self.atomsk} {infname} pdb >> gen.log")
 
 		# clean
 		self.clean_files(["gen.log"])
@@ -54,7 +71,7 @@ class Atomsk:
 		self.clean_files([datafile])
 
 		# convert xsf to pdb
-		os.system(f"atomsk {infname} lammps >> gen.log")
+		os.system(f"{self.atomsk} {infname} lammps >> gen.log")
 		os.system(f"mv {pre}.lmp {pre}.data")
 
 		# clean
@@ -85,7 +102,7 @@ class Atomsk:
 			os.remove(fname)
 
 		# use atomsk
-		os.system(f"atomsk --create {self.lattice_type_} {self.lattice_const_} {self.element_} {fname} ")
+		os.system(f"{self.atomsk} --create {self.lattice_type_} {self.lattice_const_} {self.element_} {fname} ")
 			
 	def gen_slab(self, length=50.0, width=50.0, depth=10.0, outFile="slab.pdb"):
 		# get the number of duplicates in each direction
@@ -98,7 +115,7 @@ class Atomsk:
 		self.clean_files([xsffile])
 
 		# use atomsk to generate the lattice
-		os.system(f"atomsk --create {self.lattice_type_} {self.lattice_const_} {self.element_} -duplicate {Nx} {Ny} {Nz} {xsffile} >> gen.log")
+		os.system(f"{self.atomsk} --create {self.lattice_type_} {self.lattice_const_} {self.element_} -duplicate {Nx} {Ny} {Nz} {xsffile} >> gen.log")
 
 		# convert xsf to pdb
 		outFileFormat = outFile.split(".")[-1]
@@ -126,14 +143,14 @@ class Atomsk:
 		self.clean_files([xsffile])
 
 		# generate a cubic lattice
-		os.system(f"atomsk --create {self.lattice_type_} {self.lattice_const_} {self.element_} -duplicate {Ndup} {Ndup} {Ndup} {xsffile}  >> gen.log")
+		os.system(f"{self.atomsk} --create {self.lattice_type_} {self.lattice_const_} {self.element_} -duplicate {Ndup} {Ndup} {Ndup} {xsffile}  >> gen.log")
 
 		# check if the cubic xsf file already exists
 		outxsffile = outFile.split(".")[0] + ".xsf"
 		self.clean_files([outxsffile])
 
 		# cut the cubic to form particle
-		os.system(f"atomsk {xsffile} -select out sphere 0.5*box 0.5*box 0.5*box {radius} -rmatom select {outxsffile}  >> gen.log")
+		os.system(f"{self.atomsk} {xsffile} -select out sphere 0.5*box 0.5*box 0.5*box {radius} -rmatom select {outxsffile}  >> gen.log")
 
 		# convert xsf to pdb
 		outFileFormat = outFile.split(".")[1]
@@ -162,14 +179,14 @@ class Atomsk:
 		self.clean_files([xsffile])
 
 		# generate a cubic lattice
-		os.system(f"atomsk --create {self.lattice_type_} {self.lattice_const_} {self.element_} -duplicate {Nxy} {Nxy} {Nz} {xsffile} >> gen.log")
+		os.system(f"{self.atomsk} --create {self.lattice_type_} {self.lattice_const_} {self.element_} -duplicate {Nxy} {Nxy} {Nz} {xsffile} >> gen.log")
 
 		# check if the cubic xsf file already exists
 		outxsffile = outFile.split(".")[0] + ".xsf"
 		self.clean_files([outxsffile])
 
 		# cut the cubic to form particle
-		os.system(f"atomsk {xsffile} -select in cylinder Z 0.49*box 0.49*box {radius} -rmatom select {outxsffile} >> gen.log")
+		os.system(f"{self.atomsk} {xsffile} -select in cylinder Z 0.49*box 0.49*box {radius} -rmatom select {outxsffile} >> gen.log")
 
 		# convert xsf to pdb
 		outFileFormat = outFile.split(".")[1]
@@ -198,14 +215,14 @@ class Atomsk:
 		self.clean_files([xsffile])
 
 		# generate a cubic lattice
-		os.system(f"atomsk --create {self.lattice_type_} {self.lattice_const_} {self.element_} -duplicate {Nxy} {Nxy} {Nz} {xsffile} >> gen.log")
+		os.system(f"{self.atomsk} --create {self.lattice_type_} {self.lattice_const_} {self.element_} -duplicate {Nxy} {Nxy} {Nz} {xsffile} >> gen.log")
 
 		# check if the cubic xsf file already exists
 		outxsffile = outFile.split(".")[0] + ".xsf"
 		self.clean_files([outxsffile])
 
 		# cut the cubic to form particle
-		os.system(f"atomsk {xsffile} -select out cylinder Z 0.5*box 0.5*box {radius} -rmatom select {outxsffile} >> gen.log")
+		os.system(f"{self.atomsk} {xsffile} -select out cylinder Z 0.5*box 0.5*box {radius} -rmatom select {outxsffile} >> gen.log")
 
 		# convert xsf to pdb
 		outFileFormat = outFile.split(".")[1]
