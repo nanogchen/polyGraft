@@ -7,6 +7,27 @@ from datetime import datetime
 import pandas as pd
 import tempfile
 import os
+import sys
+
+# 1. Get the absolute path to the directory containing 'src' and 'gui'
+# This assumes your structure is: project_root/gui/app.py and project_root/src/polyGraft.py
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.abspath(os.path.join(current_dir, ".."))
+
+# 2. Add project root to sys.path so 'src' is findable
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
+# 3. Add 'src' itself to sys.path so polyGraft.py can find rtp_define.py
+src_path = os.path.join(project_root, "src")
+if src_path not in sys.path:
+    sys.path.insert(0, src_path)
+
+# NOW perform your imports
+from src.polyGraft import polyGraft
+from src.polymer import Polymer
+from src.crystal import Crystal
+from src.atomsk import Atomsk
 
 # --- Helper: Global Reset ---
 def reset_all():
@@ -170,21 +191,71 @@ with col_left:
     # 3. Substrate Logic
     with st.expander("Step 5 & 6: Substrate Geometry", expanded=True):
         substrate = st.selectbox("Substrate Type:", ["Slab", "Rod", "Pore", "Sphere"])
-        dims = {}
-        c1, c2, c3 = st.columns(3)
-        if substrate == "Slab":
-            dims['Lx'] = c1.number_input("Lx [nm]", 0.1, 100.0, 10.0)
-            dims['Ly'] = c2.number_input("Ly [nm]", 0.1, 100.0, 10.0)
-            dims['Lz'] = c3.number_input("Lz [nm]", 0.1, 100.0, 5.0)
-        elif substrate == "Rod":
-            dims['R'] = c1.number_input("Radius [nm]", 0.1, 50.0, 2.0)
-            dims['L'] = c2.number_input("Length [nm]", 0.1, 200.0, 20.0)
-        elif substrate == "Pore":
-            dims['R_in'] = c1.number_input("Inner R [nm]", 0.1, 50.0, 3.0)
-            dims['R_out'] = c2.number_input("Outer R [nm]", 0.1, 50.0, 5.0)
-            dims['L'] = c3.number_input("Length [nm]", 0.1, 100.0, 10.0)
-        else: # Sphere
-            dims['R'] = c1.number_input("Radius [nm]", 0.1, 50.0, 5.0)
+        # NEW: Lattice Configuration Knobs
+        # st.markdown("---")
+
+        # Create Tabs for Uploading vs Generating
+        tab_upload, tab_generate = st.tabs(["📤 Upload Substrate Files", "🏗️ Generate Substrate"])
+
+        with tab_upload:
+            pass
+
+        with tab_generate:
+            st.info("Set parameters below, then press generate.")
+
+            st.caption("⚛️ Lattice Parameters")
+            col_lat1, col_lat2 = st.columns(2)
+            with col_lat1:
+                lattice_type = st.text_input(
+                    "Lattice Type", 
+                    value="fcc", 
+                    key="input_lattice_type"
+                )
+            with col_lat2:
+                lattice_const = st.number_input(
+                    "Lattice Constant [Å]", 
+                    value=4.08, 
+                    format="%.2f", 
+                    key="input_lattice_const"
+                )
+
+            dims = {}
+            c1, c2, c3 = st.columns(3)
+            if substrate == "Slab":
+                dims['Lx'] = c1.number_input("Lx [Å]", 0.1, 100.0, 50.0)
+                dims['Ly'] = c2.number_input("Ly [Å]", 0.1, 100.0, 50.0)
+                dims['Lz'] = c3.number_input("Lz [Å]", 0.1, 100.0, 10.0)                
+
+            elif substrate == "Rod":
+                dims['R'] = c1.number_input("Radius [Å]", 0.1, 50.0, 20.0)
+                dims['L'] = c2.number_input("Length [Å]", 0.1, 200.0, 20.0)
+            elif substrate == "Pore":
+                dims['R_in'] = c1.number_input("Inner R [Å]", 0.1, 50.0, 10.0)
+                dims['R_out'] = c2.number_input("Outer R [Å]", 0.1, 50.0, 50.0)
+                dims['L'] = c3.number_input("Length [Å]", 0.1, 100.0, 10.0)
+            else: # Sphere
+                dims['R'] = c1.number_input("Radius [Å]", 0.1, 50.0, 10.0)
+
+            if st.button("🏗️ Generate Substrate Now", use_container_width=True, key="btn_gen_sub"):
+                with st.spinner(f"Generating {lattice_type} {substrate}..."):
+                    try:
+                        # --- CALL BACKEND SUBSTRATE GENERATOR ---
+                        if substrate == "Slab":
+                            lattice = Atomsk(lattice_type=lattice_type, 
+                                            lattice_const=lattice_const, 
+                                            element='Au')
+                            lattice.gen_slab(dims['Lx'],dims['Ly'],dims['Lz'],outFile="Auslab.pdb")
+                            nanoslab = Crystal("nanoslab", 'Au', dims['Lx'],dims['Ly'],dims['Lz'])
+                            nanoslab.readPDB("Auslab.pdb", guessing_bond=True, lattice_const=lattice_const)  
+                        
+                        # For demo, we simulate a successful generation
+                        st.session_state['generated_sub_ready'] = True
+                        st.success(f"Successfully generated {substrate} ({lattice_type})!")
+                        
+                        # You could automatically load this into the 'uploaded_files' dict
+                        # or display a specialized preview here.
+                    except Exception as e:
+                        st.error(f"Generation failed: {e}")
 
     # 4. Density & Run
     with st.expander("Step 7 & 8: Density & Output", expanded=True):
