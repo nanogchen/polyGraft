@@ -1,7 +1,7 @@
 #!/bin/env python
 
 import sys
-sys.path.insert(0, "../polyGraft/")
+sys.path.insert(0, "../../src")
 from polyGraft import polyGraft
 from polymer import Polymer
 from crystal import Crystal
@@ -11,8 +11,8 @@ if __name__ == '__main__':
 
 	# import peo
 	peo = Polymer("PEO")
-	peo.readGRO("../examples/PEO12_line.gro")
-	peo.readITP("../examples/PEO12.itp")
+	peo.readGRO("../examples_gmx/PEO12_line.gro")
+	peo.readITP("../examples_gmx/PEO12.itp")
 
 	# second graft
 	peo6 = Polymer("PEO")
