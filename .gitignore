@@ -9,5 +9,7 @@ examples*/examples*/*.gro
 examples*/examples*/*.rtp
 examples*/examples*/*.top
 examples*/examples*/*.pdb
+examples*/examples*/*.data
+examples*/examples*/*.prm
 examples*/test.py
 examples*/test/
