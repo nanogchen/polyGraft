@@ -112,13 +112,16 @@ class polyGraft():
 	def genGraftStruct(self, random_grafting=False):
 		# assemble two components together
 		
-		if isinstance(self.center_, Crystal):
+		# if isinstance(self.center_, Crystal):
+		if self.center_.__class__.__name__ == "Crystal":
 			self.graftSoft2Hard(random_grafting)
 
-		elif isinstance(self.center_, cgCrystal.Crystal):
+		# elif isinstance(self.center_, cgCrystal.Crystal):
+		elif self.center_.__class__.__name__ == "Crystal":
 			self.graftSoft2Hard(random_grafting)
 
-		elif isinstance(self.center_, Polymer):
+		# elif isinstance(self.center_, Polymer):
+		elif self.center_.__class__.__name__ == "Polymer":
 			self.graftSoft2Soft(random_grafting)
 
 		else:

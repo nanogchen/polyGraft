@@ -1,10 +1,11 @@
 #!/bin/env python
 
 import sys
-sys.path.insert(0,"../polyGraft/")
+sys.path.insert(0,"../../src/")
 from polyGraft import polyGraft
 from polymer import Polymer
 from crystal import Crystal
+from atomsk import Atomsk
 
 if __name__ == '__main__':	
 
@@ -15,10 +16,20 @@ if __name__ == '__main__':
 	peo.readGRO("PEO12_line.gro")
 	peo.readITP("PEO12.itp")
 
-	# import Au nanoparticle
+	# # import Au nanoparticle
+	# radius = 20.0
+	# nanoparticle = Crystal("nanoparticle", 'Au', radius)
+	# nanoparticle.readPDB("AuNP-R20.pdb", guessing_bond=True, lattice_const=4.08)
+
+	# generate from scratch
+	# define lattice
+	lattice = Atomsk(lattice_type='fcc', lattice_const=4.08, element='Au')
+
+	# generate a slab
 	radius = 20.0
+	lattice.gen_particle(radius, outFile="AuNP-R20.pdb")
 	nanoparticle = Crystal("nanoparticle", 'Au', radius)
-	nanoparticle.readPDB("AuNP-R20.pdb", guessing_bond=True, lattice_const=4.08)
+	nanoparticle.readPDB("AuNP-R20.pdb", guessing_bond=True, lattice_const=4.08)	
 
 	# graft
 	peo_g_np = polyGraft(nanoparticle, peo)

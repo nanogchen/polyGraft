@@ -4,5 +4,10 @@ src/__pycache__/*
 polyGraft/__pycache__/
 examples*/__pycache__/
 examples*/examples*/__pycache__/
+examples*/examples*/*.itp
+examples*/examples*/*.gro
+examples*/examples*/*.rtp
+examples*/examples*/*.top
+examples*/examples*/*.pdb
 examples*/test.py
 examples*/test/
