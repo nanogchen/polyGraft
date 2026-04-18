@@ -1,7 +1,7 @@
 #!/bin/env python
 
 import sys
-sys.path.insert(0,"../polyGraft/")
+sys.path.insert(0,"../../src")
 from polymer import cgPolymer
 
 if __name__ == '__main__':
