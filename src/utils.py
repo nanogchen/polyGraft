@@ -27,12 +27,20 @@ def getTransformationMat(ref_vec, norm_vector):
 	# Au-S bond length 2.65 A
 	Au_S = 2.65
 
+	# translational matrix
+	TransMat = norm_vector*Au_S
+	TransMat = np.expand_dims(TransMat, axis=0)
+
 	# ref set in x direction
 	# ref_vec = np.asarray([1.0, 0.0, 0.0])
 	ref_vec = ref_vec/np.linalg.norm(ref_vec)
 	norm_vector = norm_vector/np.linalg.norm(norm_vector)
 
 	vect_k = np.cross(ref_vec, norm_vector)	
+	# check if ref_vec already in the same direction as norm_vector: then vect_k = [0,0,0]
+	if np.linalg.norm(vect_k) < 1e-5:
+		return np.identity(3),TransMat
+
 	vect_u = vect_k/np.linalg.norm(vect_k) # have to normalize the rotation axis (unit vector)
 	skew_mat = get_skew_matrix(vect_u)
 	sin_theta = np.linalg.norm(vect_k)/(np.linalg.norm(ref_vec)*np.linalg.norm(norm_vector))
@@ -42,10 +50,6 @@ def getTransformationMat(ref_vec, norm_vector):
 
 	# assert a rotation matrix
 	assert (np.linalg.det(RotMat) - 1) < 1e-5, f"The rotation matrix should have determinant of 1, but got {np.linalg.det(RotMat)}"
-
-	# translational matrix
-	TransMat = norm_vector*Au_S
-	TransMat = np.expand_dims(TransMat, axis=0)
 
 	return RotMat,TransMat
 

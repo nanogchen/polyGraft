@@ -595,7 +595,7 @@ class polyGraft():
 				# add ends
 				FO.write("%10.5f%10.5f%10.5f\n" % (10.0,10.0,10.0))
 
-	def toITP(self, fname):
+	def toITP(self, fname, with_mass=True):
 
 		if isinstance(self.center_, Polymer):
 			print(f"Generation of itp file for bottlebrush polymer is not available by this function! Generate pdb and rtp then use Gromacs to generate it!")
@@ -607,7 +607,10 @@ class polyGraft():
 
 				# header
 				FO.write(f"[ moleculetype ]\n")
-				FO.write(f"polyGraft            3\n")			
+				if with_mass:
+					FO.write(f"polyGraft            3\n")	
+				else:		# Martini CG
+					FO.write(f"polyGraft            1\n")			
 				FO.write("\n")
 
 				# polymer grafts first, substrate second
@@ -627,7 +630,10 @@ class polyGraft():
 						iatom = igraft.polyITP_.atoms[idx]
 
 						# atom_idx atom_type resid resname atom_name resid charge mass
-						FO.write(f"{atomidx} {iatom.type} {iatom.resid} {iatom.resname} {iatom.name} {iatom.resid} {iatom.charge:.3f} {iatom.mass}\n")
+						if with_mass:
+							FO.write(f"{atomidx} {iatom.type} {iatom.resid} {iatom.resname} {iatom.name} {iatom.resid} {iatom.charge:.3f} {iatom.mass}\n")
+						else:
+							FO.write(f"{atomidx} {iatom.type} {iatom.resid} {iatom.resname} {iatom.name} {iatom.resid} {iatom.charge:.3f}\n")
 					
 					NgraftsAtoms += igraft.polyITP_.atoms.n_atoms
 
