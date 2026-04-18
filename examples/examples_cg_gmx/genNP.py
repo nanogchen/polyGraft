@@ -1,0 +1,47 @@
+#!/bin/env python
+
+import sys
+sys.path.insert(0,"../../src/")
+from polyGraft import polyGraft
+from polymer import Polymer
+from crystal import Crystal
+from atomsk import Atomsk
+
+if __name__ == '__main__':	
+
+	# import peo
+	peo = Polymer("PE") # name not important for most cases
+
+	# read  
+	peo.readGRO("PE6.gro")
+	peo.readITP("PE6.itp")
+
+	# # import Au nanoparticle
+	# radius = 20.0
+	# nanoparticle = Crystal("nanoparticle", 'Au', radius)
+	# nanoparticle.readPDB("AuNP-R20.pdb", guessing_bond=True, lattice_const=4.08)
+
+	# generate from scratch
+	# define lattice
+	lattice = Atomsk(lattice_type='fcc', lattice_const=4.08, element='Au')
+
+	# generate a np
+	radius = 20.0
+	lattice.gen_particle(radius, outFile="AuNP-R20.pdb")
+	nanoparticle = Crystal("nanoparticle", 'Au', radius)
+	nanoparticle.readPDB("AuNP-R20.pdb", guessing_bond=True, lattice_const=4.08)	
+
+	# graft
+	peo_g_np = polyGraft(nanoparticle, peo)
+
+	# set grafting density unit in A^-2
+	gft = 0.0250 
+	peo_g_np.setGraftingDensity(gft)
+
+	# generate the grafted structure
+	peo_g_np.setGftAtoms('Au')
+	peo_g_np.genGraftStruct()
+
+	# save gro and itp
+	peo_g_np.toGRO("peo_g_np_gft"+"-R-"+str(radius)+"-sigma-"+str(gft)+".gro")
+	peo_g_np.toITP("peo_g_np_gft"+"-R-"+str(radius)+"-sigma-"+str(gft)+".itp")
