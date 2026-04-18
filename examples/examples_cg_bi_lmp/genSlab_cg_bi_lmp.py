@@ -1,7 +1,7 @@
 #!/bin/env python
 
 import sys
-sys.path.insert(0,"../polyGraft/")
+sys.path.insert(0,"../../src")
 from polyGraft import polyGraft
 from polymer import Polymer
 from cgCrystal import Crystal
