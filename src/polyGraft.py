@@ -16,7 +16,7 @@
 
 import random
 import math
-import sys
+import sys,os
 # sys.path.insert(0, "../examples/examples_gmx/")
 from rtp_define import gen_BBP_rtp, res_rtp_dict
 import numpy as np
@@ -27,6 +27,7 @@ import cgCrystal
 from atomsk import Atomsk
 from utils import getNN_two, getTransformationMat
 import utils
+from pathlib import Path
 
 class polyGraft():
 
@@ -756,7 +757,8 @@ class polyGraft():
 		impropertype2index = {k:v+1 for v,k in enumerate(unique_itypes)}
 
 		# write the dictionary
-		with open("polyGraft.prm", 'w') as fo:
+		directory = Path(fname).resolve().parent
+		with open(os.path.join(directory, "polygraft.prm"), 'w') as fo:
 			fo.write(f"# atoms\n")
 			for key, value in atomtype2index.items():
 				fo.write(f"{key}:{value}\n")

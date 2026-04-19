@@ -18,7 +18,6 @@ import MDAnalysis as mda
 import math
 import os,sys
 # 1. Get the absolute path to the directory containing 'src' and 'gui'
-# This assumes your structure is: project_root/gui/app.py and project_root/src/polyGraft.py
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.abspath(os.path.join(current_dir, ".."))
 
