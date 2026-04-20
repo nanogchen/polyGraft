@@ -47,12 +47,17 @@ with col1:
 		resolution = st.selectbox("Resolution", ["Atomistic", "Coarse-Grained"])
 	
 	# 2. Conditional Units (If Coarse-Grained)
-	units = None
+	units = "angstrom"
 	if resolution == "Coarse-Grained":
-		units = st.radio("Units", ["Å", "LJ"], horizontal=True)
+		units = st.radio("Units", ["angstrom (Å)", "LJ"], horizontal=True)
 		
 	# 3. Grafting Type
 	grafting_type = st.selectbox("Grafting Type", ["Unigraft", "Bigraft"])
+
+	# Add the specific bigraft pattern selection
+	bigraft_pattern = None
+	if grafting_type == "Bigraft":
+		bigraft_pattern = st.radio("Bigraft Pattern", ["homo-bigraft", "random-bigraft", "janus-bigraft"], horizontal=True)
 
 	st.divider()
 
@@ -85,13 +90,12 @@ with col1:
 				uploaded_files["data_2"] = st.file_uploader("Upload Polymer 2 .data", type=["data"], key="data_bi2")
 				
 		# 5. LAMMPS specific input
-		if resolution == "Coarse-Grained":
-			if units == "Å":		
-				atom_style = st.text_input("LAMMPS atom_style", value="id resid type charge x y z",
-						help="Define the order of columns in your Atoms section. Default: id resid type charge x y z")
-			else:
-				atom_style = st.text_input("LAMMPS atom_style", value="id resid type x y z",
-						help="Define the order of columns in your Atoms section. Default: id resid type x y z")
+		if units == "LJ":		
+			atom_style = st.text_input("LAMMPS atom_style", value="id resid type x y z",
+					help="Define the order of columns in your Atoms section. Default: id resid type x y z")
+		else:
+			atom_style = st.text_input("LAMMPS atom_style", value="id resid type charge x y z",
+					help="Define the order of columns in your Atoms section. Default: id resid type charge x y z")
 
 	st.divider()
 
@@ -121,10 +125,10 @@ with col1:
 	with col_lat1:
 		lattice_type = st.selectbox("Lattice Type", ["fcc", "bcc", "sc"])
 	with col_lat2:
-		if units == "Å":		
-			lattice_const = st.number_input("Lattice Constant (Å) or nearest neighbors in LJ (use 1)", value=4.08)
+		if units == "LJ": # note if CG is not selected, this is not shown
+			lattice_const = st.number_input("Lattice Constant (Å) or nearest neighbors in LJ (use 1)", value=1.0)
 		else:
-			lattice_const = st.number_input("Lattice Constant (Å) or nearest neighbors in LJ (use 1)", value=1.0)		
+			lattice_const = st.number_input("Lattice Constant (Å) or nearest neighbors in LJ (use 1)", value=4.08)		
 
 	st.divider()
 
@@ -220,16 +224,33 @@ with col2:
 					script_path = os.path.join(project_root, "examples", target_backend_module, script_name)
 					
 					st.write("### Execution Log")
-					st.write(f"Files saved to temp dir: `{tmpdirname}`")
+					# st.write(f"Files saved to temp dir: `{tmpdirname}`")
 					
 					# Display payload to ensure parameters are passing correctly
-					payload = {
+					if bigraft_pattern == None:
+						payload = {
+							"Backend Target": f"{target_backend_module}/{script_name}",
+							# "Saved Files": file_paths,
+							"Format": data_format,
+							"Resolution": resolution,
+							"Unit": units,
+							"Grafting Type": grafting_type,
+							"Atom Style": atom_style if data_format == "LAMMPS" else "N/A",
+							"Geometry": geometry,
+							"Geometry Settings": geom_params,
+							"Lattice Type": lattice_type,
+							"Lattice Constant": lattice_const,
+							"Grafting Density": grafting_density
+						}
+					else:
+						payload = {
 						"Backend Target": f"{target_backend_module}/{script_name}",
 						# "Saved Files": file_paths,
 						"Format": data_format,
 						"Resolution": resolution,
-						"Unit": units if resolution == "Coarse-Grained" else "N/A",
+						"Unit": units,
 						"Grafting Type": grafting_type,
+						"Bigraft Pattern": bigraft_pattern,
 						"Atom Style": atom_style if data_format == "LAMMPS" else "N/A",
 						"Geometry": geometry,
 						"Geometry Settings": geom_params,
@@ -238,8 +259,8 @@ with col2:
 						"Grafting Density": grafting_density
 					}
 					
-					with st.expander("View Backend Parameter Payload"):
-						st.json(payload)
+					# with st.expander("View Backend Parameter Payload"):
+					# 	st.json(payload)
 										
 					# 4. Import the module dynamically and execute
 					try:
@@ -249,31 +270,63 @@ with col2:
 							st.info(f"Executing backend script: `{module_name}`...")
 							
 							with st.spinner(f"Generating {geometry} Brush..."):
+								
 								# CALLING THE BACKEND FUNCTION:
 								if data_format == "GROMACS": # Atomistic or cg
-									output_files = gen_code.gen(
-										gro_file=file_paths.get('gro'),
-										itp_file=file_paths.get('itp'),
-										geometry=geometry,
-										geom_params=geom_params,
-										lattice_type=lattice_type,
-										lattice_constant=lattice_const,
-										grafting_density=grafting_density,
-										output_dir=tmpdirname
-									)
+									if grafting_type == "Unigraft":
+										output_files = gen_code.gen(
+											gro_file=file_paths.get('gro'),
+											itp_file=file_paths.get('itp'),
+											geometry=geometry,
+											geom_params=geom_params,
+											lattice_type=lattice_type,
+											lattice_constant=lattice_const,
+											grafting_density=grafting_density,
+											output_dir=tmpdirname
+										)
+
+									elif grafting_type == "Bigraft":
+										output_files = gen_code.gen(
+											gro1_file=file_paths.get('gro1'),
+											gro2_file=file_paths.get('gro2'),
+											itp1_file=file_paths.get('itp1'),
+											itp2_file=file_paths.get('itp2'),
+											geometry=geometry,
+											geom_params=geom_params,
+											lattice_type=lattice_type,
+											lattice_constant=lattice_const,
+											bigraft_pattern=bigraft_pattern,
+											grafting_density=grafting_density,
+											output_dir=tmpdirname
+										)
 
 								elif data_format == "LAMMPS": # Atomistic or cg
-									output_files = gen_code.gen(
-										data_file=file_paths.get('data'),
-										atom_style=atom_style,
-										geometry=geometry,
-										geom_params=geom_params,
-										lattice_type=lattice_type,
-										lattice_constant=lattice_const,
-										grafting_density=grafting_density,
-										output_dir=tmpdirname
-									)
-							
+									if grafting_type == "Unigraft":
+										output_files = gen_code.gen(
+											data_file=file_paths.get('data'),
+											atom_style=atom_style,
+											geometry=geometry,
+											geom_params=geom_params,
+											lattice_type=lattice_type,
+											lattice_constant=lattice_const,
+											grafting_density=grafting_density,
+											output_dir=tmpdirname
+										)
+
+									elif grafting_type == "Bigraft":
+										output_files = gen_code.gen(
+											data1_file=file_paths.get('data1'),
+											data2_file=file_paths.get('data2'),
+											atom_style=atom_style,
+											geometry=geometry,
+											geom_params=geom_params,
+											lattice_type=lattice_type,
+											lattice_constant=lattice_const,
+											bigraft_pattern=bigraft_pattern,
+											grafting_density=grafting_density,
+											output_dir=tmpdirname
+										)
+
 							# Handle the outputs (whether it's a single string or a tuple/list of strings)
 							if output_files:
 								# Convert a single string to a list so we can process it uniformly
@@ -332,5 +385,5 @@ with col2:
 						st.error(f"An error occurred during generation: {e}")
 
 			# Temporary files deleted automatically after this block
-			st.caption("Disk cleanup: Temporary files have been removed from the server.")
+			# st.caption("Disk cleanup: Temporary files have been removed from the server.")
 			
