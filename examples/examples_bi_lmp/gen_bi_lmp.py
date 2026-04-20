@@ -7,17 +7,22 @@ from polymer import Polymer
 from crystal import Crystal
 from atomsk import Atomsk
 
-def gen(data_file, atom_style, geometry, geom_params, lattice_type, lattice_constant, grafting_density, output_dir):
+def gen(data1_file, data2_file, atom_style, geometry, geom_params, lattice_type, lattice_constant, bigraft_pattern, grafting_density, output_dir):
 	
 	# Debugging check:
-	if not os.path.exists(data_file):
-		raise FileNotFoundError(f"Whoops! Expected to find {data_file} but it isn't there.")
+	for datafile in [data1_file, data2_file]:
+		if not os.path.exists(datafile):
+			raise FileNotFoundError(f"Whoops! Expected to find {datafile} but it isn't there.")
 		
 	# import peo
 	peo = Polymer("PEO")
 
 	# read  
-	peo.readDATA(data_file, atom_style=atom_style)
+	peo.readDATA(data1_file, atom_style=atom_style)
+
+	# second graft
+	peo6 = Polymer("PEO")
+	peo6.readDATA(data2_file, atom_style=atom_style)
 
 	# define lattice
 	lattice = Atomsk(lattice_type=lattice_type, lattice_const=lattice_constant, element='Au')
@@ -54,6 +59,8 @@ def gen(data_file, atom_style, geometry, geom_params, lattice_type, lattice_cons
 
 	# graft
 	peo_g_subs = polyGraft(substrate, peo)
+	peo_g_subs.setBinaryGraft(peo6)
+	peo_g_subs.setBinaryGraftStyle(bigraft_pattern)
 
 	# set grafting density unit in A^-2
 	peo_g_subs.setGraftingDensity(grafting_density)

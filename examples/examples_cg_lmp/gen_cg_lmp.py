@@ -11,7 +11,7 @@ def gen(data_file, atom_style, geometry, geom_params, lattice_type, lattice_cons
 	
 	# Debugging check:
 	if not os.path.exists(data_file):
-		raise FileNotFoundError(f"Whoops! Expected to find {gro_file} but it isn't there.")
+		raise FileNotFoundError(f"Whoops! Expected to find {data_file} but it isn't there.")
 		
 	# import peo
 	peo = Polymer("CG")
@@ -20,7 +20,7 @@ def gen(data_file, atom_style, geometry, geom_params, lattice_type, lattice_cons
 	peo.readDATA(data_file, atom_style=atom_style)
 
 	# define lattice
-	lattice = Atomsk(lattice_type=lattice_type, nearest_neighbor=1, element='Au')
+	lattice = Atomsk(lattice_type=lattice_type, nearest_neighbor=lattice_constant, element='Au')
 
 	# generate substrate
 	tempfile = os.path.join(output_dir, "Au.data")	
