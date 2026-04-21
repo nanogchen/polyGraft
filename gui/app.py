@@ -1,4 +1,6 @@
 import streamlit as st
+from stmol import showmol
+import py3Dmol
 import os,sys
 import tempfile
 import importlib
@@ -19,7 +21,185 @@ if src_path not in sys.path:
 
 src_path = os.path.join(project_root, "examples")
 if src_path not in sys.path:
-	sys.path.insert(0, src_path)    
+	sys.path.insert(0, src_path)  
+
+# global variables
+if 'saved_files' not in st.session_state:
+	st.session_state['saved_files'] = {}
+if 'uploaded_files' not in st.session_state:
+	st.session_state['uploaded_files'] = {}
+
+def reset_app():
+	"""Clears all session state variables to reset the UI."""
+	for key in st.session_state.keys():
+		del st.session_state[key]
+
+# --- Helper: Molecule Viewer ---
+def render_molecule(file_obj, file_format, label):
+	"""Renders molecular files in 3D using py3Dmol."""
+	if file_obj is not None:
+		st.write(f"🔍 **{label} Preview**")
+		try:
+			string_data = file_obj.getvalue().decode("utf-8")
+			view = py3Dmol.view(width=500, height=275)
+			# GROMACS uses 'gro'; LAMMPS data often maps best to 'xyz' for basic atom viewing
+			fmt_type = 'gro' if file_format == "GROMACS" else 'xyz' 
+			view.addModel(string_data, fmt_type)
+			view.setStyle({'stick': {'radius': 0.2}, 'sphere': {'radius': 0.4}})
+			view.zoomTo()
+			showmol(view, width=500, height=275)
+		except Exception as e:
+			st.error(f"Could not render {label}: {e}")
+
+def render_lammps_preview(file_obj, atom_style_str):
+	if file_obj is None:
+		return
+
+	# 1. Parse atom_style for indices
+	cols = atom_style_str.split()
+	try:
+		ix, iy, iz = cols.index('x'), cols.index('y'), cols.index('z')
+		it = cols.index('type')
+	except ValueError:
+		st.error(f"Mapping Error: Style '{atom_style_str}' is missing x, y, z, or type.")
+		return
+
+	# 2. Extract Data
+	lines = file_obj.getvalue().decode("utf-8").splitlines()
+	xyz_data = []
+	reading = False
+	
+	for line in lines:
+		clean_line = line.split('#')[0].strip() # Remove comments
+		if not clean_line: continue
+		
+		# Detect Start of Atoms section
+		if "Atoms" in clean_line:
+			reading = True
+			continue
+		
+		# Detect End of Atoms section
+		if reading and any(k in clean_line for k in ["Bonds", "Velocities", "Angles", "Dihedrals"]):
+			reading = False
+			break
+			
+		if reading:
+			parts = clean_line.split()
+			# Ensure the line actually looks like atom data (starts with an ID number)
+			if len(parts) >= len(cols) and parts[0].isdigit():
+				try:
+					# Assign a color based on type (Type 1=H, 2=He, 6=C, etc.)
+					elements = ["H", "He", "Li", "Be", "B", "C", "N", "O", "F", "Ne"]
+					elem = elements[int(parts[it]) % len(elements)]
+					xyz_data.append(f"{elem} {parts[ix]} {parts[iy]} {parts[iz]}")
+				except (ValueError, IndexError):
+					continue
+
+	# 3. Visualization
+	if xyz_data:
+		st.success(f"Parsed {len(xyz_data)} atoms successfully.")
+		xyz_string = f"{len(xyz_data)}\nConverted LAMMPS\n" + "\n".join(xyz_data)
+		
+		view = py3Dmol.view(width=500, height=275)
+		view.addModel(xyz_string, 'xyz')
+		# OVITO style: Spacefill spheres, no connecting 'net' lines
+		view.setStyle({'sphere': {'colorscheme': 'Jmol', 'radius': 0.8}})
+		view.zoomTo()
+		showmol(view, width=500, height=275)
+	else:
+		st.error("No atom data found. Please verify that your 'Atoms' section starts with the word 'Atoms' and contains numeric data rows.")
+		# Debugging: show the first 20 lines so you can see why it failed
+		with st.expander("View File Header (Debug)"):
+			st.code("\n".join(lines[:30]))
+
+def render_molecule_from_file(file_path, file_format, label):
+	"""Renders molecular files in 3D using py3Dmol from a saved disk path."""
+	# Check if the path exists instead of checking if it's None
+	if file_path and os.path.exists(file_path):
+		st.write(f"🔍 **{label} Preview**")
+		try:
+			# Open and read the physical file
+			with open(file_path, "r", encoding="utf-8") as f:
+				string_data = f.read()
+				
+			view = py3Dmol.view(width=500, height=275)
+			# GROMACS uses 'gro'; LAMMPS data often maps best to 'xyz' for basic atom viewing
+			fmt_type = 'gro' if file_format == "GROMACS" else 'xyz' 
+			view.addModel(string_data, fmt_type)
+			view.setStyle({'stick': {'radius': 0.2}, 'sphere': {'radius': 0.4}})
+			view.zoomTo()
+			showmol(view, width=500, height=275)
+		except Exception as e:
+			st.error(f"Could not render {label}: {e}")
+
+def render_lammps_preview_from_file(file_path, atom_style_str):
+	"""Extracts coordinates from a saved LAMMPS data file and renders them."""
+	if not file_path or not os.path.exists(file_path):
+		return
+
+	# 1. Parse atom_style for indices
+	cols = atom_style_str.split()
+	try:
+		ix, iy, iz = cols.index('x'), cols.index('y'), cols.index('z')
+		it = cols.index('type')
+	except ValueError:
+		st.error(f"Mapping Error: Style '{atom_style_str}' is missing x, y, z, or type.")
+		return
+
+	# 2. Extract Data
+	xyz_data = []
+	reading = False
+	
+	try:
+		# Open and read the lines from the physical file
+		with open(file_path, "r", encoding="utf-8") as f:
+			lines = f.read().splitlines()
+	except Exception as e:
+		st.error(f"Error reading LAMMPS file for rendering: {e}")
+		return
+	
+	for line in lines:
+		clean_line = line.split('#')[0].strip() # Remove comments
+		if not clean_line: continue
+		
+		# Detect Start of Atoms section
+		if "Atoms" in clean_line:
+			reading = True
+			continue
+		
+		# Detect End of Atoms section
+		if reading and any(k in clean_line for k in ["Bonds", "Velocities", "Angles", "Dihedrals"]):
+			reading = False
+			break
+			
+		if reading:
+			parts = clean_line.split()
+			# Ensure the line actually looks like atom data (starts with an ID number)
+			if len(parts) >= len(cols) and parts[0].isdigit():
+				try:
+					# Assign a color based on type (Type 1=H, 2=He, 6=C, etc.)
+					elements = ["H", "He", "Li", "Be", "B", "C", "N", "O", "F", "Ne"]
+					elem = elements[int(parts[it]) % len(elements)]
+					xyz_data.append(f"{elem} {parts[ix]} {parts[iy]} {parts[iz]}")
+				except (ValueError, IndexError):
+					continue
+
+	# 3. Visualization
+	if xyz_data:
+		st.success(f"Parsed {len(xyz_data)} atoms successfully.")
+		xyz_string = f"{len(xyz_data)}\nConverted LAMMPS\n" + "\n".join(xyz_data)
+		
+		view = py3Dmol.view(width=500, height=275)
+		view.addModel(xyz_string, 'xyz')
+		# OVITO style: Spacefill spheres, no connecting 'net' lines
+		view.setStyle({'sphere': {'colorscheme': 'Jmol', 'radius': 0.8}})
+		view.zoomTo()
+		showmol(view, width=500, height=275)
+	else:
+		st.error("No atom data found. Please verify that your 'Atoms' section starts with the word 'Atoms' and contains numeric data rows.")
+		# Debugging: show the first 30 lines so you can see why it failed
+		with st.expander("View File Header (Debug)"):
+			st.code("\n".join(lines[:30]))
 
 # -----------------------------------------------------------------------------
 # Configuration and UI Setup
@@ -31,13 +211,13 @@ st.title("PolyGraft: Molecular Grafting Tool")
 # Define the two main columns
 # col1: Input parameters (left)
 # col2: Visualization/Rendering (right)
-col1, col2 = st.columns([1, 1], gap="large")
+col1, col2 = st.columns([1.25, 1], gap="large")
 
 # -----------------------------------------------------------------------------
 # Left Column: User Parameters
 # -----------------------------------------------------------------------------
 with col1:
-	st.header("⚙️ Configuration inputs")
+	st.subheader("⚙️ Configuration Inputs")
 	
 	# 1. Base Settings
 	col_fmt, col_res = st.columns(2)
@@ -51,43 +231,37 @@ with col1:
 	if resolution == "Coarse-Grained":
 		units = st.radio("Units", ["angstrom (Å)", "LJ"], horizontal=True)
 		
-	# 3. Grafting Type
+	# 3. Grafting Type: this also determines No. of files needed
 	grafting_type = st.selectbox("Grafting Type", ["Unigraft", "Bigraft"])
-
-	# Add the specific bigraft pattern selection
-	bigraft_pattern = None
-	if grafting_type == "Bigraft":
-		bigraft_pattern = st.radio("Bigraft Pattern", ["homo-bigraft", "random-bigraft", "janus-bigraft"], horizontal=True)
 
 	st.divider()
 
 	# 4. File Uploaders based on Format and Grafting Type
-	st.subheader("Polymer Input Files")
+	st.subheader("🧬 Polymer Input Files")
 	
-	uploaded_files = {}
-	
+	# uploaded_files = {}	
 	if data_format == "GROMACS":
 		if grafting_type == "Unigraft":
-			uploaded_files["gro_1"] = st.file_uploader("Upload Polymer .gro", type=["gro"], key="gro_uni")
-			uploaded_files["itp_1"] = st.file_uploader("Upload Polymer .itp", type=["itp"], key="itp_uni")
+			st.session_state['uploaded_files']["gro_1"] = st.file_uploader("Upload Polymer .gro", type=["gro"], key="gro_uni")
+			st.session_state['uploaded_files']["itp_1"] = st.file_uploader("Upload Polymer .itp", type=["itp"], key="itp_uni")
 		elif grafting_type == "Bigraft":
 			col_a, col_b = st.columns(2)
 			with col_a:
-				uploaded_files["gro_1"] = st.file_uploader("Upload Polymer 1 .gro", type=["gro"], key="gro_bi1")
-				uploaded_files["itp_1"] = st.file_uploader("Upload Polymer 1 .itp", type=["itp"], key="itp_bi1")
+				st.session_state['uploaded_files']["gro_1"] = st.file_uploader("Upload Polymer 1 .gro", type=["gro"], key="gro_bi1")
+				st.session_state['uploaded_files']["itp_1"] = st.file_uploader("Upload Polymer 1 .itp", type=["itp"], key="itp_bi1")
 			with col_b:
-				uploaded_files["gro_2"] = st.file_uploader("Upload Polymer 2 .gro", type=["gro"], key="gro_bi2")
-				uploaded_files["itp_2"] = st.file_uploader("Upload Polymer 2 .itp", type=["itp"], key="itp_bi2")
+				st.session_state['uploaded_files']["gro_2"] = st.file_uploader("Upload Polymer 2 .gro", type=["gro"], key="gro_bi2")
+				st.session_state['uploaded_files']["itp_2"] = st.file_uploader("Upload Polymer 2 .itp", type=["itp"], key="itp_bi2")
 				
 	elif data_format == "LAMMPS":
 		if grafting_type == "Unigraft":
-			uploaded_files["data_1"] = st.file_uploader("Upload Polymer .data", type=["data"], key="data_uni")
+			st.session_state['uploaded_files']["data_1"] = st.file_uploader("Upload Polymer .data", type=["data"], key="data_uni")
 		elif grafting_type == "Bigraft":
 			col_a, col_b = st.columns(2)
 			with col_a:
-				uploaded_files["data_1"] = st.file_uploader("Upload Polymer 1 .data", type=["data"], key="data_bi1")
+				st.session_state['uploaded_files']["data_1"] = st.file_uploader("Upload Polymer 1 .data", type=["data"], key="data_bi1")
 			with col_b:
-				uploaded_files["data_2"] = st.file_uploader("Upload Polymer 2 .data", type=["data"], key="data_bi2")
+				st.session_state['uploaded_files']["data_2"] = st.file_uploader("Upload Polymer 2 .data", type=["data"], key="data_bi2")
 				
 		# 5. LAMMPS specific input
 		if units == "LJ":		
@@ -100,7 +274,7 @@ with col1:
 	st.divider()
 
 	# 6. Substrate Geometry
-	st.subheader("Substrate Geometry")
+	st.subheader("🧱 Substrate Geometry")
 	geometry = st.selectbox("Shape", ["Slab", "Rod", "Pore", "Sphere"])
 	
 	geom_params = {}
@@ -133,12 +307,17 @@ with col1:
 	st.divider()
 
 	# 7. Lattice & Grafting Parameters
-	st.subheader("Grafting Density")
+	st.subheader("🏗️ Grafting Settings")
 	grafting_density = st.number_input("Grafting Density (chains/Å² or chains/σ²)", value=0.0120, format="%.4f")
+
+	# Add the specific bigraft pattern selection
+	bigraft_pattern = None
+	if grafting_type == "Bigraft":
+		bigraft_pattern = st.radio("Bigraft Pattern", ["homo-bigraft", "random-bigraft", "janus-bigraft"], horizontal=True)
 
 	# 8. Generation Trigger
 	st.divider()
-	generate_btn = st.button("Generate Hybrid Structure", type="primary", use_container_width=True)
+	generate_btn = st.button("🚀 Generate Hybrid Structure", type="primary", use_container_width=True)
 
 # -----------------------------------------------------------------------------
 # Backend Routing & Execution Logic
@@ -164,10 +343,16 @@ def get_backend_module(fmt, res, g_type):
 # Right Column: Rendering Preview
 # -----------------------------------------------------------------------------
 with col2:
-	st.header("Preview & Rendering")
 	
 	# Placeholder for the 3D viewer (e.g., py3Dmol or NGLview)
-	preview_container = st.container(border=True, height=650)
+	st.subheader("🖼️ Molecular Generation & Preview")	
+	st.write("🧬 Graft Visualization")
+	polymer_preview_container = st.container(border=True, height=275)
+	st.write("🚀 Assembled System Visualization")
+	hybrid_preview_container = st.container(border=True, height=275)
+	st.write("📜 Excution log")
+	preview_container = st.container(border=True, height=275)
+	st.button("🔄 Reset All Parameters", on_click=reset_app, use_container_width=True)	
 	
 	with preview_container:
 		if not generate_btn:
@@ -176,7 +361,7 @@ with col2:
 
 			# Create a temporary directory that automatically cleans up after the block finishes
 			with tempfile.TemporaryDirectory() as tmpdirname:
-				preview_container.success("Processing hybrid structure in temporary directory...")
+				# preview_container.success("Processing hybrid structure in temporary directory...")
 				
 				# Helper function to write Streamlit UploadedFile to the temp disk
 				def save_uploadedfile(uploaded_file):
@@ -188,31 +373,31 @@ with col2:
 					return None
 
 				# 1. Initialize file path variables
-				file_paths = {}
+				# saved_files = {}
 
 				# 2. Save the uploaded files based on the format and grafting type
 				if data_format == "GROMACS":
 					if grafting_type == "Unigraft":
-						file_paths['gro'] = save_uploadedfile(uploaded_files["gro_1"])
-						file_paths['itp'] = save_uploadedfile(uploaded_files["itp_1"])
+						st.session_state['saved_files']['gro'] = save_uploadedfile(st.session_state['uploaded_files']["gro_1"])
+						st.session_state['saved_files']['itp'] = save_uploadedfile(st.session_state['uploaded_files']["itp_1"])
 					elif grafting_type == "Bigraft":
-						file_paths['gro1'] = save_uploadedfile(uploaded_files["gro_1"])
-						file_paths['itp1'] = save_uploadedfile(uploaded_files["itp_1"])
-						file_paths['gro2'] = save_uploadedfile(uploaded_files["gro_2"])
-						file_paths['itp2'] = save_uploadedfile(uploaded_files["itp_2"])
+						st.session_state['saved_files']['gro1'] = save_uploadedfile(st.session_state['uploaded_files']["gro_1"])
+						st.session_state['saved_files']['itp1'] = save_uploadedfile(st.session_state['uploaded_files']["itp_1"])
+						st.session_state['saved_files']['gro2'] = save_uploadedfile(st.session_state['uploaded_files']["gro_2"])
+						st.session_state['saved_files']['itp2'] = save_uploadedfile(st.session_state['uploaded_files']["itp_2"])
 				
 				elif data_format == "LAMMPS":
 					if grafting_type == "Unigraft":
-						file_paths['data'] = save_uploadedfile(uploaded_files["data_1"])
+						st.session_state['saved_files']['data'] = save_uploadedfile(st.session_state['uploaded_files']["data_1"])
 					elif grafting_type == "Bigraft":
-						file_paths['data1'] = save_uploadedfile(uploaded_files["data_1"])
-						file_paths['data2'] = save_uploadedfile(uploaded_files["data_2"])
+						st.session_state['saved_files']['data1'] = save_uploadedfile(st.session_state['uploaded_files']["data_1"])
+						st.session_state['saved_files']['data2'] = save_uploadedfile(st.session_state['uploaded_files']["data_2"])
 
 				# Check if required files were actually uploaded before proceeding
-				missing_files = [k for k, v in file_paths.items() if v is None]
+				missing_files = [k for k, v in st.session_state['saved_files'].items() if v is None]
 
 				# HARD STOP IF FILES ARE MISSING
-				if missing_files or not file_paths:
+				if missing_files or not st.session_state['saved_files']:
 					st.error(f"Missing or lost file uploads: {missing_files}. Please re-upload and try again.")
 					st.stop() # This completely prevents the backend from running!
 
@@ -221,16 +406,14 @@ with col2:
 					target_backend_module = get_backend_module(data_format, resolution, grafting_type) 
 					# Target the specific gen_*.py script inside examples*
 					script_name = target_backend_module.replace("examples", "gen") + ".py" # e.g., "gen_lmp.py"
-					script_path = os.path.join(project_root, "examples", target_backend_module, script_name)
-					
-					st.write("### Execution Log")
+					script_path = os.path.join(project_root, "examples", target_backend_module, script_name)					
 					# st.write(f"Files saved to temp dir: `{tmpdirname}`")
 					
 					# Display payload to ensure parameters are passing correctly
 					if bigraft_pattern == None:
 						payload = {
 							"Backend Target": f"{target_backend_module}/{script_name}",
-							# "Saved Files": file_paths,
+							# "Saved Files": saved_files,
 							"Format": data_format,
 							"Resolution": resolution,
 							"Unit": units,
@@ -245,7 +428,7 @@ with col2:
 					else:
 						payload = {
 						"Backend Target": f"{target_backend_module}/{script_name}",
-						# "Saved Files": file_paths,
+						# "Saved Files": saved_files,
 						"Format": data_format,
 						"Resolution": resolution,
 						"Unit": units,
@@ -275,22 +458,22 @@ with col2:
 								if data_format == "GROMACS": # Atomistic or cg
 									if grafting_type == "Unigraft":
 										output_files = gen_code.gen(
-											gro_file=file_paths.get('gro'),
-											itp_file=file_paths.get('itp'),
+											gro_file=st.session_state['saved_files'].get('gro'),
+											itp_file=st.session_state['saved_files'].get('itp'),
 											geometry=geometry,
 											geom_params=geom_params,
 											lattice_type=lattice_type,
 											lattice_constant=lattice_const,
 											grafting_density=grafting_density,
 											output_dir=tmpdirname
-										)
+										)										
 
 									elif grafting_type == "Bigraft":
 										output_files = gen_code.gen(
-											gro1_file=file_paths.get('gro1'),
-											gro2_file=file_paths.get('gro2'),
-											itp1_file=file_paths.get('itp1'),
-											itp2_file=file_paths.get('itp2'),
+											gro1_file=st.session_state['saved_files'].get('gro1'),
+											gro2_file=st.session_state['saved_files'].get('gro2'),
+											itp1_file=st.session_state['saved_files'].get('itp1'),
+											itp2_file=st.session_state['saved_files'].get('itp2'),
 											geometry=geometry,
 											geom_params=geom_params,
 											lattice_type=lattice_type,
@@ -303,7 +486,7 @@ with col2:
 								elif data_format == "LAMMPS": # Atomistic or cg
 									if grafting_type == "Unigraft":
 										output_files = gen_code.gen(
-											data_file=file_paths.get('data'),
+											data_file=st.session_state['saved_files'].get('data'),
 											atom_style=atom_style,
 											geometry=geometry,
 											geom_params=geom_params,
@@ -315,8 +498,8 @@ with col2:
 
 									elif grafting_type == "Bigraft":
 										output_files = gen_code.gen(
-											data1_file=file_paths.get('data1'),
-											data2_file=file_paths.get('data2'),
+											data1_file=st.session_state['saved_files'].get('data1'),
+											data2_file=st.session_state['saved_files'].get('data2'),
 											atom_style=atom_style,
 											geometry=geometry,
 											geom_params=geom_params,
@@ -360,7 +543,7 @@ with col2:
 									# Offer the ZIP file for download
 									with open(zip_filepath, "rb") as zfile:
 										st.download_button(
-											label=f"📦 Download All Output Files (.zip)",
+											label=f"💾 Download All Output Files (.zip)",
 											data=zfile,
 											file_name=zip_filename,
 											mime="application/zip",
@@ -368,6 +551,17 @@ with col2:
 										)
 									
 									st.success(f"{geometry} brush generation complete! ({len(valid_files)} files bundled in zip)")
+
+									# poly-substrate Preview Section
+									with hybrid_preview_container:
+
+										if data_format == "GROMACS": 
+											generated_gro = next((f for f in valid_files if f.endswith('.gro')), None)
+											render_molecule_from_file(generated_gro, data_format, "polyGraft")
+										else:
+											generated_data = next((f for f in valid_files if f.endswith('.data')), None)
+											render_lammps_preview_from_file(generated_data, atom_style)
+
 								else:
 									st.error("Backend executed, but none of the returned file paths could be found on disk.")
 							else:
@@ -386,4 +580,24 @@ with col2:
 
 			# Temporary files deleted automatically after this block
 			# st.caption("Disk cleanup: Temporary files have been removed from the server.")
-			
+	
+	# 🧬 Graft Visualization
+	with polymer_preview_container:
+		# This section reacts live to uploads in the left column
+		if grafting_type == "Unigraft":
+			f_main = st.session_state['uploaded_files'].get('gro_1') or st.session_state['uploaded_files'].get('data_1')
+			if f_main:
+				if data_format == "GROMACS": render_molecule(f_main, data_format, "Primary Graft")
+				else: render_lammps_preview(f_main, atom_style)
+		else:
+			f_a = st.session_state['uploaded_files'].get('gro_1') or st.session_state['uploaded_files'].get('data_1')
+			f_b = st.session_state['uploaded_files'].get('gro_2') or st.session_state['uploaded_files'].get('data_2')
+			if f_a: 
+				if data_format == "GROMACS": render_molecule(f_a, data_format, "Graft A")
+				else: render_lammps_preview(f_a, atom_style)
+			if f_b: 
+				st.divider()
+				if data_format == "GROMACS": render_molecule(f_b, data_format, "Graft B")
+				else: render_lammps_preview(f_b, atom_style)
+
+			if not f_a and not f_b: st.info("Upload A/B structure files to preview.")
