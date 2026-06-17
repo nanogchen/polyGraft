@@ -83,7 +83,7 @@ def getNN_two(pos1, pos2):
 		gft_idx = np.argmin(dist_vec)
 		atom_idx.append(gft_idx)
 
-	return pos2[atom_idx,:], np.array(atom_idx)+1
+	return pos2[atom_idx,:], np.array(atom_idx, dtype=np.int64)+1
 
 def rad2deg(rad):
 

@@ -104,7 +104,7 @@ class polyGraft():
 			self.Ngrafts_ = len(self.centerGftedIdx_)
 
 			# remove Hydrogen bonded to graft atom if there is a graft
-			index_lst = list(set(self.center_.polyGRO_.atoms.indices)-set(np.array(self.centerGftedIdx_)+1))
+			index_lst = list(set(self.center_.polyGRO_.atoms.indices)-set(np.array(self.centerGftedIdx_, dtype=np.int64)+1))
 			
 			# the final structure poly-g-soft: initialized with the backbones
 			self.graftStruct_ = self.center_.polyGRO_.atoms[index_lst]
