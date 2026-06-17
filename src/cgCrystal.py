@@ -17,7 +17,7 @@
 import MDAnalysis as mda
 import numpy as np
 from numpy.linalg import norm
-from numba import njit, prange, int64, float64
+from numba import njit, prange
 import math
 
 @njit

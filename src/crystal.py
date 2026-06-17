@@ -33,7 +33,7 @@ def getNN(xyz,lattice):
 	# bonds
 	Natoms = xyz.shape[0]
 	Max = Natoms*(Natoms-1)
-	bonds = np.empty((Max, 2), dtype=np.int_)	
+	bonds = np.empty((Max, 2), dtype=np.int64)	
 
 	# loop
 	nbonds = 0
