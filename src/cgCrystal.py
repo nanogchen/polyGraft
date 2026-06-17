@@ -17,7 +17,7 @@
 import MDAnalysis as mda
 import numpy as np
 from numpy.linalg import norm
-from numba import njit, prange
+from numba import njit, prange, int64, float64
 import math
 
 @njit
@@ -32,7 +32,7 @@ def getNN(xyz,nearest_neighbor):
 	# bonds
 	Natoms = xyz.shape[0]
 	Max = Natoms*(Natoms-1)
-	bonds = np.empty((Max, 2), dtype=np.int_)	
+	bonds = np.empty((Max, 2), dtype=np.int64)	
 
 	# loop
 	nbonds = 0
